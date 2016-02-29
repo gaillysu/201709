@@ -8,16 +8,16 @@ This repository is made so we can have a library which we can use anytime for an
 
 ## 1. Terminal
 First open your terminal and do a git pull on (depending on if you use https or ssh auth):
-https://gitlab.com/imazeapp/med-library.git
-git@gitlab.com:imazeapp/med-library.git
+* https://gitlab.com/imazeapp/med-library.git
+* git@gitlab.com:imazeapp/med-library.git
 
 Make sure that you have the right access rights. If you don’t, mail/slack me
 
 ## 2. Location
 Put it into the same folder as the folder where your project is located so for example:
 1. Documents/Code
-..* nevo 
-..* MED_library
+⋅⋅* nevo 
+⋅⋅* MED_library
 
 ## 3. settings.graddle
 Go to your settings.graddle file in your project (in this example, nevo). In this case nevo. Add the following 2 lines:
