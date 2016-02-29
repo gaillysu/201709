@@ -16,8 +16,8 @@ Make sure that you have the right access rights. If you don’t, mail/slack me
 ## 2. Location
 Put it into the same folder as the folder where your project is located so for example:
 1. Documents/Code
-⋅⋅-nevo 
-⋅⋅-MED_library
+...nevo 
+...MED_library
 
 ## 3. settings.graddle
 Go to your settings.graddle file in your project (in this example, nevo). In this case nevo. Add the following 2 lines:
