@@ -17,7 +17,7 @@ import java.util.List;
 
 
 /**
- * The Interface NevoBT is the core manager for the bluetooth interface. (deepest layer)
+ * The Interface MEDBT is the core manager for the bluetooth interface. (deepest layer)
  * In order to connect to a bluetooth device, we should instantiate it, then add a OnDataReceivedListener.
  * The OnDataReceivedListener will handle all the callbacks coming from the peripherals.
  * 
@@ -92,13 +92,13 @@ public interface MEDBT {
 
     /**
      *
-     * @return the nevo 's firmware version, it means the BLE firware version
+     * @return the SERVICE 's firmware version, it means the BLE firware version
      */
     String getBluetoothVersion();
 
     /**
      *
-     * @return the nevo's software version, it means the MCU firmware version
+     * @return the SERVICE's software version, it means the MCU firmware version
      */
     String getSoftwareVersion();
 

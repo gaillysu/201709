@@ -234,7 +234,7 @@ public class MEDBTService extends Service {
 		onFirmwareVersionListener = firmware;
 
 
-		queuedMainThread = QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.NevoBT);
+		queuedMainThread = QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.MEDBT);
 
 		dataSource = source;
 
@@ -456,7 +456,7 @@ public class MEDBTService extends Service {
 				Optional<String> device = isServiceConnected(service.getUuid());
 				//If yes, maybe it's this device address. If not, then we shouldn't connect this device, let's disconnect.
 				if(device.notEmpty()&&!device.get().equals(address)) {
-					Log.w(MEDBT.TAG, "disconnect the second BLE device (same service UUID,eg:  the 2nd. nevo): "+address);
+					Log.w(MEDBT.TAG, "disconnect the second BLE device (same service UUID,eg:  the 2nd. Nevo): "+address);
 					disconnect(address);
 					return;
 				}
@@ -483,23 +483,12 @@ public class MEDBTService extends Service {
 
 					//Is this characteristic supported ?
 					Log.v(MEDBT.TAG,"Characteristic UUID:" + uuid);
-					if (GattAttributes.supportedBLECharacteristic(dataSource,uuid))
+					if (GattAttributes.supportedBLECharacteristic(dataSource, uuid))
 					{
 						Log.i(MEDBT.TAG, "Activating supported characteristic : "+address+" "+uuid);
 						setCharacteristicNotification(gatt, characteristic, true);
 						characteristicChosen = true;
 
-					}
-
-					//For all the characteristics that needs to be initialised, we do so
-					if (GattAttributes.shouldInitBLECharacteristic(uuid)) {
-						queuedMainThread.post(new Runnable() {
-							@Override
-							public void run() {
-								if (gatt != null)
-									gatt.writeCharacteristic(GattAttributes.initBLECharacteristic(uuid, characteristic));
-							}
-						});
 					}
 				}
 			}
@@ -510,7 +499,7 @@ public class MEDBTService extends Service {
 			}
 			else
 			{
-				//here only connect one nevo, the first nevo by scan to find out
+				//here only connect one SERVICE, the first SERVICE by scan to find out
 				bluetoothGattMap.put(gatt.getDevice().getAddress(), gatt);
 				if(onConnectListener !=null && gatt!=null) onConnectListener.onConnectionStateChanged(true,gatt.getDevice().getAddress());
 			}
@@ -724,7 +713,7 @@ public class MEDBTService extends Service {
 					{
 						for(final byte[] data : rawDatas)
 						{
-							//make sure every packet is sent one by one with the low level Queue: QueueType.NevoBT
+							//make sure every packet is sent one by one with the low level Queue: QueueType.MEDBT
 							queuedMainThread.post(new Runnable() {
 								@Override
 								public void run() {
@@ -739,7 +728,7 @@ public class MEDBTService extends Service {
 					{
 						if(rawData != null)
 						{
-							//make sure every packet is sent one by one with the low level Queue: QueueType.NevoBT
+							//make sure every packet is sent one by one with the low level Queue: QueueType.MEDBT
 							queuedMainThread.post(new Runnable() {
 								@Override
 								public void run() {

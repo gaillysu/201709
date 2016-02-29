@@ -1,7 +1,5 @@
 package net.medcorp.library.ble.model.request;
 
-import android.content.Context;
-
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
 
 import java.util.UUID;
@@ -14,32 +12,30 @@ import java.util.UUID;
 
 public abstract class RequestData {
 
-    protected Context context;
     private GattAttributesDataSource dataSource;
 
-    public RequestData(Context context, GattAttributesDataSource dataSource) {
-        this.context = context;
+    public RequestData(GattAttributesDataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     public UUID getServiceUUID() {
-        return dataSource.getNevoService();
+        return dataSource.getService();
     }
 
     public UUID getCharacteristicUUID() {
-        return dataSource.getNevoCallbackCharacteristic();
+        return dataSource.getCallbackCharacteristic();
     }
 
     public UUID getInputCharacteristicUUID() {
-        return dataSource.getNevoInputCharacteristic();
+        return dataSource.getInputCharacteristic();
     }
 
     public UUID getOTACharacteristicUUID() {
-        return dataSource.getNevoOtaCharacteristic();
+        return dataSource.getOtaCharacteristic();
     }
 
     public UUID getNotificationCharacteristicUUID() {
-        return dataSource.getNevoNotificationCharacteristic();
+        return dataSource.getNotificationCharacteristic();
     }
 
     /**

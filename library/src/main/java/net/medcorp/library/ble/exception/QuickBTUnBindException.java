@@ -5,7 +5,7 @@ import net.medcorp.library.ble.exception.visitor.BLEExceptionVisitor;
 
 /**
  * Created by gaillysu on 15/5/11.
- * if send QuickBt command without bind a nevo, will throw this class
+ * if send QuickBt command without bind a SERVICE, will throw this class
  */
 public class QuickBTUnBindException extends BaseBLEException {
 

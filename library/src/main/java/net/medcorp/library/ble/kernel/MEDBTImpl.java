@@ -146,7 +146,7 @@ public class MEDBTImpl implements MEDBT {
 			if(onExceptionListener.notEmpty()) {
 				onExceptionListener.get().onException(e);
 			}
-			//fix a bug: S4 got connected with nevo, if close S4 BT, the nevo can't get connected.
+			//fix a bug: S4 got connected with SERVICE, if close S4 BT, the SERVICE can't get connected.
 			return;
         }
 
@@ -165,7 +165,7 @@ public class MEDBTImpl implements MEDBT {
                 mSupportServicelist = serviceList;
 
                 //clear Queue before every connect
-                QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.NevoBT).clear();
+                QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.MEDBT).clear();
 
 				//We start a scan
 				if(bluetoothAdapter !=null) {

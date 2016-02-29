@@ -10,7 +10,7 @@ import java.util.UUID;
 /*
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
  */
-class NevoRawDataImpl extends NevoRawData {
+class MEDRawDataImpl extends MEDRawData {
 
 	private static final long serialVersionUID = 1L;
 
@@ -21,7 +21,7 @@ class NevoRawDataImpl extends NevoRawData {
 
 	private byte[] mRawData;
 
-	public NevoRawDataImpl(BluetoothGattCharacteristic characteristic, String address) {
+	public MEDRawDataImpl(BluetoothGattCharacteristic characteristic, String address) {
 		mAddress = address;
 		mUuid = characteristic.getUuid();
 		mRawData = characteristic.getValue();

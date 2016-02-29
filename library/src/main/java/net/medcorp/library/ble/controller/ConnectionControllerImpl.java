@@ -107,9 +107,9 @@ import java.util.TimerTask;
         if(inOTAMode())
         {
             forgetSavedAddress();
-            servicelist.add(GattAttributes.SupportedService.nevo_ota);
+            servicelist.add(GattAttributes.SupportedService.OTA_SERVICE);
         } else {
-            servicelist.add(GattAttributes.SupportedService.nevo);
+            servicelist.add(GattAttributes.SupportedService.SERVICE);
         }
         Optional<String> preferredAddress = new Optional<String>();
 
@@ -124,7 +124,7 @@ import java.util.TimerTask;
     public void reconnect()
     {
         List<GattAttributes.SupportedService> servicelist = new ArrayList<GattAttributes.SupportedService>();
-        servicelist.add(GattAttributes.SupportedService.nevo);
+        servicelist.add(GattAttributes.SupportedService.SERVICE);
         Optional<String> preferredAddress = new Optional<String>();
         if(hasSavedAddress()){
             preferredAddress.set(getSaveAddress());
@@ -157,7 +157,7 @@ import java.util.TimerTask;
 
                 @Override
                 public void run() {
-                    Log.w("Nevo BT SDK", "Connected : " + mIsConnected);
+                    Log.w("MED BT SDK", "Connected : " + mIsConnected);
                     if(onConnectListener.notEmpty())
                     {
                         onConnectListener.get().onConnectionStateChanged(mIsConnected, "");
@@ -172,12 +172,12 @@ import java.util.TimerTask;
 
         if(!address.equals("") && connected == true)
         {
-            //firstly connected this nevo: such as: first run app, forget this nevo
+            //firstly connected this SERVICE: such as: first run app, forget this SERVICE
             boolean firstConnected = !hasSavedAddress();
             setSaveAddress(address);
 
             //http://stackoverflow.com/questions/21398766/android-ble-connection-time-interval
-            //fix a bug:when BLE OTA done,need repair nevo, if not, must twice connect nevo that nevo can work fine, here use code do repair working or twice connection
+            //fix a bug:when BLE OTA done,need repair SERVICE, if not, must twice connect SERVICE that SERVICE can work fine, here use code do repair working or twice connection
             //call pairDevice() after every connected, if call it within connect() before startScan() invoke,
             //some smartphone will popup message ,this message comes from Android OS, such as samsung...
             if((firstConnected || needPair()) && !inOTAMode()) pairDevice();
@@ -347,12 +347,9 @@ import java.util.TimerTask;
        restartAutoReconnectTimer();
     }
 
-    /**
-     * how to check the Nevo always keep connection , invoke the function when  connection changed.
-     * @param connected
-     */
     private void sendNotification(boolean connected)
     {
+        // TODO find nice solution for this
 //        if(!Preferences.getLinklossNotification(context))
 //        {
 //            return;

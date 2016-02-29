@@ -25,7 +25,7 @@ import java.util.concurrent.BlockingQueue;
 public class QueuedMainThreadHandler {
 
     public enum QueueType {
-        NevoBT, SyncController,OtaController,GoogleFit,LocalDatabase
+        MEDBT, SyncController,OtaController,GoogleFit,LocalDatabase
     }
 
 	/*Classic singleton class*/

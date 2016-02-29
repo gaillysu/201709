@@ -1,7 +1,7 @@
 package net.medcorp.library.ble.controller;
 
 
-import net.medcorp.library.ble.listener.OnNevoOtaControllerListener;
+import net.medcorp.library.ble.listener.OnOtaControllerListener;
 import net.medcorp.library.ble.util.Constants;
 
 /**
@@ -24,8 +24,8 @@ public interface OtaController {
     void cancelDFU();
 
     /**
-     * manualmode: false:normal OTA, nevo get connected and work normal
-     *             true: manual OTA: both press Key A & B, insert battery, force nevo entry DFU mode.
+     * manualmode: false:normal OTA, SERVICE get connected and work normal
+     *             true: manual OTA: both press Key A & B, insert battery, force SERVICE entry DFU mode.
      */
     void setManualMode(boolean manualmode);
 
@@ -37,7 +37,7 @@ public interface OtaController {
     /**
      * set hight level listener, it should be a activity (OTA controller view:Activity or one fragment)
      */
-    void setOnNevoOtaControllerListener(OnNevoOtaControllerListener listener);
+    void setOnOtaControllerListener(OnOtaControllerListener listener);
 
     /**
      * read ConnectionController status
@@ -81,7 +81,7 @@ public interface OtaController {
     void setOtaMode(boolean otaMode, boolean disConnect);
 
     /**
-     * when BLE OTA done, need unpair Nevo (forget it)
+     * when BLE OTA done, need unpair device (forget it)
      */
     void forGetDevice();
 
@@ -98,7 +98,7 @@ public interface OtaController {
         NOFINISHREADVERSION
     }
 
-    public static String PREF_NAME = "nevoPrefs";
-    public static String SYNCDATE = "nevoSyncdate";
+    public static String PREF_NAME = "medPrefs";
+    public static String SYNCDATE = "medSyncdate";
 
 }

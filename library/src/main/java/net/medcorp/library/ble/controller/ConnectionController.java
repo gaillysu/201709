@@ -54,11 +54,6 @@ public interface ConnectionController {
 
     public String getSoftwareVersion();
 
-    /**
-     go to the OTA mode. In this mode, it searchs the Nevo that can enable OTA (DFU service opened)
-     It won't connect to other Nevo and will stop sending regular nevo querries
-     add second parameter, when BLE ota, auto disconnect by BLE peer, so no need disconnect it again
-     */
     public void setOTAMode(boolean otaMode, boolean disConnect);
 
     /**

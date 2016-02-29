@@ -8,7 +8,7 @@ import net.medcorp.library.ble.util.Constants;
 /**
  * Created by gaillysu on 15/4/1.
  */
-public interface OnNevoOtaControllerListener {
+public interface OnOtaControllerListener {
     /**
      Called when a packet is received from the device
      */
@@ -21,7 +21,7 @@ public interface OnNevoOtaControllerListener {
     public void onSuccessfulFileTranferred();
     public void onError(OtaController.ERRORCODE errorcode);
     /**
-     Call when finished OTA, will reconnect nevo and read firmware, refresh the firmware  to screen view
+     Call when finished OTA, will reconnect SERVICE and read firmware, refresh the firmware  to screen view
      @parameter whichfirmware, firmware type
      @parameter version, return the version
      */

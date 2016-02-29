@@ -26,8 +26,6 @@ public class FirmwareData implements ResponseData {
 
         mRawData = characteristic.getValue();
 
-
-//        Log.i("Nevo Received", mUuid.toString() + " : " + new String(Hex.encodeHex(mRawData)));
     }
 
     @Override

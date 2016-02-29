@@ -3,8 +3,6 @@
  */
 package net.medcorp.library.ble.ble;
 
-import android.bluetooth.BluetoothGattCharacteristic;
-
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
 import net.medcorp.library.ble.util.Optional;
 
@@ -18,37 +16,28 @@ import java.util.UUID;
 public class GattAttributes {
 
     public enum SupportedService {
-        nevo,
-        nevo_ota,
-        allService
+        SERVICE,
+        OTA_SERVICE,
+        ALL_SERVICE
     }
 
     public static boolean supportedBLEService(GattAttributesDataSource source, UUID uuid) {
-		if (uuid.equals(source.getNevoService())) {
+		if (uuid.equals(source.getService())) {
             return true;
         }
 		return false;
 	}
     
     public static boolean supportedBLECharacteristic(GattAttributesDataSource source,UUID uuid){
-        if (uuid.equals(source.getNevoCallbackCharacteristic())
-                || uuid.equals(source.getNevoOtaCallbackCharacteristic())
-                || uuid.equals(source.getNevoOtaCharacteristic())) {
+        if (uuid.equals(source.getCallbackCharacteristic())
+                || uuid.equals(source.getOtaCallbackCharacteristic())
+                || uuid.equals(source.getOtaCharacteristic())) {
             return true;
         }
 		return false;
     }
-    
-    public static boolean shouldInitBLECharacteristic(UUID uuid){
-		return false;
-    }
-    
-    public static BluetoothGattCharacteristic initBLECharacteristic(UUID uuid, BluetoothGattCharacteristic characteristic){
-		return characteristic;
-    }
 
     public static boolean supportedBLEService(GattAttributesDataSource source, List<UUID> uuids) {
-    	boolean supported = false;
     	for(UUID uuid : uuids){
     		if(supportedBLEService(source,uuid)) {
                 return true;
@@ -59,11 +48,11 @@ public class GattAttributes {
     
     public static Optional<SupportedService> TransferUUID2SupportedService(GattAttributesDataSource source, UUID uuid)
     {
-        if(uuid.equals(source.getNevoService())){
-        return new Optional<SupportedService>(SupportedService.nevo);
+        if(uuid.equals(source.getService())){
+        return new Optional<SupportedService>(SupportedService.SERVICE);
     }
-        if(uuid.equals(source.getNevoOtaService())){
-        return new Optional<SupportedService>(SupportedService.nevo_ota);
+        if(uuid.equals(source.getOtaService())){
+        return new Optional<SupportedService>(SupportedService.OTA_SERVICE);
     }
        return new Optional<SupportedService>();
     }
@@ -81,7 +70,7 @@ public class GattAttributes {
     		
     		//If all services are supported, then we add each and every services we find.
     		//If the service we are investigating is in the supported services list, we add it too
-    		if(supportServicelist.contains(SupportedService.allService)
+    		if(supportServicelist.contains(SupportedService.ALL_SERVICE)
     				|| supportServicelist.contains(service.get())) {
     			chosenServices.add(uuid);
     			continue;

@@ -13,10 +13,10 @@ public class DataFactory {
         // This is special handling for the Heart Rate Measurement profile.  Data parsing is
         // carried out as per profile specifications:
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-		if (dataSource.getNevoOtaCallbackCharacteristic().equals(characteristic.getUuid())){
-			return new NevoRawDataImpl(characteristic, address);
-		} else if (dataSource.getNevoOtaCallbackCharacteristic().equals(characteristic.getUuid())
-				|| dataSource.getNevoOtaCharacteristic().equals(characteristic.getUuid())){
+		if (dataSource.getOtaCallbackCharacteristic().equals(characteristic.getUuid())){
+			return new MEDRawDataImpl(characteristic, address);
+		} else if (dataSource.getOtaCallbackCharacteristic().equals(characteristic.getUuid())
+				|| dataSource.getOtaCharacteristic().equals(characteristic.getUuid())){
 			return new FirmwareData(characteristic, address);
 		}
         return new UnknownData();

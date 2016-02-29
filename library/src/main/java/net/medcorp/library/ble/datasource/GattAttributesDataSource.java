@@ -15,21 +15,21 @@ public interface  GattAttributesDataSource {
 
     public UUID getClientCharacteristicConfig();
 
-    public UUID getNevoService();
+    public UUID getService();
 
-    public UUID getNevoCallbackCharacteristic();
+    public UUID getCallbackCharacteristic();
 
-    public UUID getNevoInputCharacteristic();
+    public UUID getInputCharacteristic();
 
-    public UUID getNevoOtaCharacteristic();
+    public UUID getOtaCharacteristic();
 
-    public UUID getNevoNotificationCharacteristic();
+    public UUID getNotificationCharacteristic();
 
-    public UUID getNevoOtaService();
+    public UUID getOtaService();
 
-    public UUID getNevoOtaControlCharacteristic();
+    public UUID getOtaControlCharacteristic();
 
-    public UUID getNevoOtaCallbackCharacteristic();
+    public UUID getOtaCallbackCharacteristic();
 
 
 }
