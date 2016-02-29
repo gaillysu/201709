@@ -15,27 +15,36 @@ Make sure that you have the right access rights. If you don’t, mail/slack me
 
 ## 2. Location
 Put it into the same folder as the folder where your project is located so for example:
-	Documents/Code  — nevo 
-			      — MED_library
+1. Documents/Code
+..* nevo 
+..* MED_library
 
 ## 3. settings.graddle
 Go to your settings.graddle file in your project (in this example, nevo). In this case nevo. Add the following 2 lines:
-	include ':library'
-	project(':library').projectDir = new File(settingsDir, '../../../MED_library/library')
+```graddle
+include ':library'
+project(':library').projectDir = new File(settingsDir, '../../../MED_library/library')
+```
 
 Make sure that you navigate to Documents/Code with the ../../. 
 
 ## 4. build.graddle 
 Go to your build.graddle from the module (which means, not the build.graddle from your project). This build.graddle is the file also the other dependencies are. Add the following dependency in dependencies:
-	compile project(‘:library')
+```graddle
+compile project(‘:library')
+```
 
 ## 5. manifest tools
 Go to your manifest and at in your manifest tag:
-	xmlns:tools=“http://schemas.android.com/tools"
+```xml
+xmlns:tools=“http://schemas.android.com/tools"
+```
 
 ## 6. manifest dependency
 Go to your application tag and add:
-	tools:replace=“android:theme"
+```xml
+tools:replace=“android:theme"
+```
 
 And you are done!
 
