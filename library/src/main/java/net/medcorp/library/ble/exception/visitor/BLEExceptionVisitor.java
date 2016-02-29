@@ -3,8 +3,8 @@ package net.medcorp.library.ble.exception.visitor;
 import net.medcorp.library.ble.exception.BLEConnectTimeoutException;
 import net.medcorp.library.ble.exception.BLENotSupportedException;
 import net.medcorp.library.ble.exception.BLEUnstableException;
-import net.medcorp.library.ble.exception.BluetoothDisabledException;
 import net.medcorp.library.ble.exception.BaseBLEException;
+import net.medcorp.library.ble.exception.BluetoothDisabledException;
 import net.medcorp.library.ble.exception.QuickBTSendTimeoutException;
 import net.medcorp.library.ble.exception.QuickBTUnBindException;
 
