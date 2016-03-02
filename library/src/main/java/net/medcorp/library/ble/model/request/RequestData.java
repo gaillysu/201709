@@ -38,6 +38,21 @@ public abstract class RequestData {
         return dataSource.getNotificationCharacteristic();
     }
 
+    public UUID getOTAServiceUUID()
+    {
+        return dataSource.getOtaService();
+    }
+
+    public UUID getOTACallbackCharacteristicUUID()
+    {
+        return dataSource.getOtaCallbackCharacteristic();
+    }
+
+    public UUID getOTAControlCharacteristicUUID()
+    {
+        return dataSource.getOtaControlCharacteristic();
+    }
+
     /**
      * @return the raw data to be sent
      */
