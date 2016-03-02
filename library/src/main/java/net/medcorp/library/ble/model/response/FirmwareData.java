@@ -1,6 +1,11 @@
 package net.medcorp.library.ble.model.response;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.util.Log;
+
+import net.medcorp.library.ble.kernel.MEDBT;
+
+import org.apache.commons.codec.binary.Hex;
 
 import java.util.UUID;
 
@@ -25,6 +30,8 @@ public class FirmwareData implements ResponseData {
         mUuid = characteristic.getUuid();
 
         mRawData = characteristic.getValue();
+
+        Log.i(MEDBT.TAG, "Receive Data " + new String(Hex.encodeHex(mRawData)));
 
     }
 

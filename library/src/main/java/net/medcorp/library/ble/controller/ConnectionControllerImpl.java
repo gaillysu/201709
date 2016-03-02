@@ -90,7 +90,7 @@ import java.util.TimerTask;
                         if (onConnectListener.notEmpty()) onConnectListener.get().onSearchFailure();
                         Log.w(MEDBT.TAG, "connection timeout(3 minutes),stop searching.");
                     } else {
-                        Log.w(MEDBT.TAG, "Connection lost, reconnecting in " + mReConnectTimerPattern[mTimerIndex] / 1000 + "s");
+                        Log.w(MEDBT.TAG, "Connection lost, reconnecting in " + mReConnectTimerPattern[mTimerIndex-1] / 1000 + "s");
                         connect();
                     }
                 }
