@@ -140,7 +140,7 @@ public class QueuedMainThreadHandler {
 	 * Locks the handler
 	 */
 	 synchronized void lock(){
-		Log.v(QueuedMainThreadHandler.class.toString(),"Lock acquired");
+		//Log.v(QueuedMainThreadHandler.class.toString(),"Lock acquired");
 		mLock = true;
 		
 		//Here we reset the Timeout timer
@@ -153,7 +153,7 @@ public class QueuedMainThreadHandler {
 	 * Unlocks the handler.
 	 */
 	 synchronized void unlock(){
-		Log.v(QueuedMainThreadHandler.class.toString(),"Lock released");
+		//Log.v(QueuedMainThreadHandler.class.toString(),"Lock released");
 		mLock = false;
 		
 		//Here me stop the timeout timer
