@@ -18,7 +18,7 @@ public interface OnOtaControllerListener {
     public void onDFUStarted();
     public void onDFUCancelled();
     public void onTransferPercentage(int percent);
-    public void onSuccessfulFileTranferred();
+    public void onSuccessfulFileTranfered();
     public void onError(OtaController.ERRORCODE errorcode);
     /**
      Call when finished OTA, will reconnect SERVICE and read firmware, refresh the firmware  to screen view

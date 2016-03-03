@@ -13,27 +13,6 @@ public class Constants {
     public static final String LAST_SYNC_TIME_ZONE = "last_sync_time_zone";
     public static final String FIRST_FLAG = "first_flag";
 
-    static public class DFUResponse
-    {
-        byte responseCode;
-        byte requestedCode;
-        byte responseStatus;
-
-        public DFUResponse(byte responseCode,byte requestedCode,byte responseStatus)
-        {
-            this.responseCode = responseCode;
-            this.requestedCode = requestedCode;
-            this.responseStatus = responseStatus;
-        }
-        public byte getresponseCode(){return responseCode;}
-        public byte getrequestedCode(){return requestedCode;}
-        public byte getresponseStatus(){return responseStatus;}
-
-        public void setresponseCode(byte responseCode){this.responseCode=responseCode;}
-        public void setrequestedCode(byte requestedCode){this.requestedCode=requestedCode;}
-        public void setresponseStatus(byte responseStatus){this.responseStatus=responseStatus;}
-    }
-
     public enum  enumFileExtension{
         HEX(0),ZIP(1),BIN(2);
         private int mValue;

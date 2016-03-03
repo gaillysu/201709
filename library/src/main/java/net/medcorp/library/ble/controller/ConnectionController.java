@@ -65,7 +65,6 @@ public interface ConnectionController {
      restore the saved address. BLE OTA use it
      Usage:forgetSavedAddress()/restoreSavedAddress(), if not call forgetSavedAddress()
      before call it, do nothing
-     //TODO what does this method do in the end?
      */
     public void restoreSavedAddress();
 
