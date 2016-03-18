@@ -3,8 +3,6 @@
  */
 package net.medcorp.library.ble.util;
 
-
-
 public class Constants {
     //TODO best to do in core_keys.xml
     public static final String PREF_NAME = "NevoPrefs";
@@ -73,10 +71,10 @@ public class Constants {
     }
 
     public enum DfuFirmwareTypes{
-          SOFTDEVICE (0x01),
+          MCU(0x01),
           BOOTLOADER (0x02),
           SOFTDEVICE_AND_BOOTLOADER (0x03),
-          APPLICATION (0x04);
+          BLUETOOTH(0x04);
         private int mValue;
         private DfuFirmwareTypes(int value){this.mValue = value;}
         public  int rawValue() {return mValue;}

@@ -3,7 +3,7 @@ package net.medcorp.library.ble.model.response;
 /*
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
  */
-public abstract class MEDRawData implements ResponseData {
+public abstract class MEDRawData implements BLEResponseData {
 
 	private static final long serialVersionUID = -2770351097320911999L;
 

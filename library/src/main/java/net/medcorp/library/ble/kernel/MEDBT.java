@@ -6,11 +6,7 @@ package net.medcorp.library.ble.kernel;
 import net.medcorp.library.ble.ble.GattAttributes;
 import net.medcorp.library.ble.exception.BLENotSupportedException;
 import net.medcorp.library.ble.exception.BluetoothDisabledException;
-import net.medcorp.library.ble.listener.OnConnectListener;
-import net.medcorp.library.ble.listener.OnDataReceivedListener;
-import net.medcorp.library.ble.listener.OnExceptionListener;
-import net.medcorp.library.ble.listener.OnFirmwareVersionListener;
-import net.medcorp.library.ble.model.request.RequestData;
+import net.medcorp.library.ble.model.request.BLERequestData;
 import net.medcorp.library.ble.util.Optional;
 
 import java.util.List;
@@ -74,21 +70,7 @@ public interface MEDBT {
     /**
 	 * Send request. Sends a write request to all the devices that supports the right service and characteristic.
 	 */
-	void sendRequest(RequestData request);
-
-
-	/**
-	 * Delegate will be notified of connection change, exceptions and data received events
-	 */
-
-    void setOnExceptionListener(OnExceptionListener listener);
-
-    void setOnDataReceivedListener(OnDataReceivedListener listener);
-
-    void setOnConnectListener(OnConnectListener listener);
-
-    void setOnFirmwareVersionListener(OnFirmwareVersionListener listener);
-
+	void sendRequest(BLERequestData request);
 
     /**
      *

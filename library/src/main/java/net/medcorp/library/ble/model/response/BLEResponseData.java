@@ -10,7 +10,7 @@ import java.io.Serializable;
  * It is given to the callback at regular intervals and contains all the data sent by the peripheral.
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
  */
-public interface ResponseData extends Serializable {
+public interface BLEResponseData extends Serializable {
 	
 	/**
 	 * The mac address of the peripheral that sent those data.

@@ -21,15 +21,16 @@ import net.medcorp.library.ble.ble.GattAttributes;
 import net.medcorp.library.ble.ble.GattAttributes.SupportedService;
 import net.medcorp.library.ble.ble.MEDBTService;
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
+import net.medcorp.library.ble.event.BLEExceptionEvent;
+import net.medcorp.library.ble.event.BLESearchEvent;
 import net.medcorp.library.ble.exception.BLENotSupportedException;
+import net.medcorp.library.ble.exception.BaseBLEException;
 import net.medcorp.library.ble.exception.BluetoothDisabledException;
-import net.medcorp.library.ble.listener.OnConnectListener;
-import net.medcorp.library.ble.listener.OnDataReceivedListener;
-import net.medcorp.library.ble.listener.OnExceptionListener;
-import net.medcorp.library.ble.listener.OnFirmwareVersionListener;
-import net.medcorp.library.ble.model.request.RequestData;
+import net.medcorp.library.ble.model.request.BLERequestData;
 import net.medcorp.library.ble.util.Optional;
 import net.medcorp.library.ble.util.QueuedMainThreadHandler;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -62,12 +63,6 @@ public class MEDBTImpl implements MEDBT {
 	private BluetoothAdapter bluetoothAdapter;
 
 	private Context context;
-
-
-	private Optional<OnExceptionListener> onExceptionListener = new Optional<OnExceptionListener>();
-	private Optional<OnDataReceivedListener> onDataReceivedListener = new Optional<OnDataReceivedListener>();
-	private Optional<OnConnectListener> onConnectListener = new Optional<OnConnectListener>();
-	private Optional<OnFirmwareVersionListener> onFirmwareVersionListener = new Optional<OnFirmwareVersionListener>();
 
 	/**
 	 * The list of currently binded services.
@@ -111,21 +106,18 @@ public class MEDBTImpl implements MEDBT {
 		
 		try {
 			initBluetoothAdapter();
-		} catch (BLENotSupportedException e) {
-			if(onExceptionListener.notEmpty()) {
-				onExceptionListener.get().onException(e);
-			}
-		} catch (BluetoothDisabledException e) {
-			if(onExceptionListener.notEmpty()) {
-				onExceptionListener.get().onException(e);
-			}
+		} catch (BaseBLEException e) {
+            EventBus.getDefault().post(new BLEExceptionEvent(e));
 		}
 	}
 
 
     @Override
 	public synchronized void startScan(final List<SupportedService> serviceList, final Optional<String> preferredAddress) {
-		if(isScanning) {Log.i(TAG,"Scanning......return ******");return;}
+		if(isScanning){
+            Log.i(TAG,"Scanning......return ******");
+            return;
+        }
         //If we're already conected to this address, no need to go any further
         if (preferredAddress.notEmpty() && isAlreadyConnected(preferredAddress.get()) ) {return;}
 
@@ -137,17 +129,9 @@ public class MEDBTImpl implements MEDBT {
 		//We check if bluetooth is enabled and/or if the device isn't ble capable
 		try {
 			initBluetoothAdapter();
-        } catch (BLENotSupportedException e) {
-            if(onExceptionListener.notEmpty()) {
-				onExceptionListener.get().onException(e);
-			}
-			return;
-        } catch (BluetoothDisabledException e) {
-			if(onExceptionListener.notEmpty()) {
-				onExceptionListener.get().onException(e);
-			}
-			//fix a bug: S4 got connected with SERVICE, if close S4 BT, the SERVICE can't get connected.
-			return;
+        } catch (BaseBLEException e) {
+            EventBus.getDefault().post(new BLEExceptionEvent(e));
+            return;
         }
 
 		
@@ -169,7 +153,7 @@ public class MEDBTImpl implements MEDBT {
 
 				//We start a scan
 				if(bluetoothAdapter !=null) {
-					if(onConnectListener.notEmpty()) onConnectListener.get().onSearching();
+                    EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
 					isScanning = true;
 					bluetoothAdapter.startLeScan(mLeScanCallback);
 				}
@@ -248,15 +232,13 @@ public class MEDBTImpl implements MEDBT {
 
                     Log.d(TAG, "Device "+deviceAddress+" found to support service : "+GattAttributes.supportedBLEServiceByEnum(dataSource,advertisedUUIDs, mSupportServicelist).get(0));
 
-					if(onConnectListener.notEmpty()) onConnectListener.get().onSearchSuccess();
+                    EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCH_SUCCESS));
                     //If yes, let's bind this device !
                     if(mCurrentService.isEmpty())
                         bindNewService(deviceAddress);
                     else
                     {
-						if(onConnectListener.notEmpty()){
-							onConnectListener.get().onConnecting();
-						}
+                        EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
                         mCurrentService.get().connect(deviceAddress);
                     }
 
@@ -274,7 +256,7 @@ public class MEDBTImpl implements MEDBT {
 	 * @see fr.imaze.sdk.kernel.ImazeBT#sendRequest(fr.imaze.sdk.model.request.SensorRequest, fr.imaze.sdk.ble.SupportedService)
 	 */
 	@Override
-	public void sendRequest(RequestData request) {
+	public void sendRequest(BLERequestData request) {
 		if(mCurrentService.notEmpty()) {
 			mCurrentService.get().sendRequest(request);
 		} else {
@@ -395,23 +377,14 @@ public class MEDBTImpl implements MEDBT {
 			@Override
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.v(MEDBT.TAG, name+" Service connected");
-				
-				//If we had this service already connected, we disconnect it
-				//here comment by gaillysu, should not call disconnect()
-				//disconnect(deviceAddress);
-
-                if(onExceptionListener.isEmpty() || onDataReceivedListener.isEmpty() || onConnectListener.isEmpty() || onFirmwareVersionListener.isEmpty() ) {
-                    Log.e(MEDBT.TAG, "Impossible to connect service ! No delegate");
-                    return;
-                }
 
 				//This object is the bridge to get informations and control the service
 				mCurrentService = new Optional<MEDBTService.LocalBinder> ( (MEDBTService.LocalBinder) service );
 				
 				//We launch a conenction to the given device
-				mCurrentService.get().initialize(onDataReceivedListener.get(),onConnectListener.get(),onExceptionListener.get(),onFirmwareVersionListener.get(),dataSource);
+				mCurrentService.get().initialize(dataSource);
 
-				if(onConnectListener.notEmpty()) onConnectListener.get().onConnecting();
+                EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
 				//now connect this device
 				mCurrentService.get().connect(deviceAddress);
 			}
@@ -442,7 +415,7 @@ public class MEDBTImpl implements MEDBT {
 		
 		// Checks if Bluetooth is supported on the device.
 		if (bluetoothAdapter == null) {
-			throw new BLENotSupportedException(); 
+			throw new BLENotSupportedException();
 		}
 		if(bluetoothAdapter.isDiscovering()) bluetoothAdapter.cancelDiscovery();
 		return bluetoothAdapter;
@@ -527,25 +500,4 @@ public class MEDBTImpl implements MEDBT {
         }
         return uuids;
     }
-
-	@Override
-	public void setOnExceptionListener(OnExceptionListener listener) {
-		onExceptionListener.set(listener);
-	}
-
-	@Override
-	public void setOnDataReceivedListener(OnDataReceivedListener listener) {
-		onDataReceivedListener.set(listener);
-	}
-
-	@Override
-	public void setOnConnectListener(OnConnectListener listener) {
-		onConnectListener.set(listener);
-	}
-
-	@Override
-	public void setOnFirmwareVersionListener(OnFirmwareVersionListener listener) {
-		onFirmwareVersionListener.set(listener);
-	}
-
 }

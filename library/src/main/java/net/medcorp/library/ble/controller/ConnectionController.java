@@ -3,11 +3,7 @@ package net.medcorp.library.ble.controller;
 import android.content.Context;
 
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
-import net.medcorp.library.ble.listener.OnConnectListener;
-import net.medcorp.library.ble.listener.OnDataReceivedListener;
-import net.medcorp.library.ble.listener.OnExceptionListener;
-import net.medcorp.library.ble.listener.OnFirmwareVersionListener;
-import net.medcorp.library.ble.model.request.RequestData;
+import net.medcorp.library.ble.model.request.BLERequestData;
 
 /**
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
@@ -48,7 +44,7 @@ public interface ConnectionController {
 
     public void forgetSavedAddress();
 
-    public void sendRequest(RequestData request);
+    public void sendRequest(BLERequestData request);
 
     public String getBluetoothVersion();
 
@@ -75,9 +71,5 @@ public interface ConnectionController {
     public void pairDevice();
     public void unPairDevice();
 
-    public void setOnExceptionListener(OnExceptionListener listener);
-    public void setOnDataReceivedListener(OnDataReceivedListener listener);
-    public void setOnConnectListener(OnConnectListener listener);
-    public void setOnFirmwareVersionListener(OnFirmwareVersionListener listener);
 
 }

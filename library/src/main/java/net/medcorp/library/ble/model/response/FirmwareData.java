@@ -9,10 +9,7 @@ import org.apache.commons.codec.binary.Hex;
 
 import java.util.UUID;
 
-/**
- * Created by Hugo on 17/5/15.
- */
-public class FirmwareData implements ResponseData {
+public class FirmwareData implements BLEResponseData {
 
     String mAddress;
 

@@ -9,7 +9,7 @@ import net.medcorp.library.ble.datasource.GattAttributesDataSource;
 
 public class DataFactory {
 	
-	public static ResponseData fromBluetoothGattCharacteristic(GattAttributesDataSource dataSource, final BluetoothGattCharacteristic characteristic, final String address) {
+	public static BLEResponseData fromBluetoothGattCharacteristic(GattAttributesDataSource dataSource, final BluetoothGattCharacteristic characteristic, final String address) {
         // This is special handling for the Heart Rate Measurement profile.  Data parsing is
         // carried out as per profile specifications:
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml

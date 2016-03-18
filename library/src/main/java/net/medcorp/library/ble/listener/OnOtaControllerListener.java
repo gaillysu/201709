@@ -2,7 +2,7 @@ package net.medcorp.library.ble.listener;
 
 
 import net.medcorp.library.ble.controller.OtaController;
-import net.medcorp.library.ble.model.response.ResponseData;
+import net.medcorp.library.ble.model.response.BLEResponseData;
 import net.medcorp.library.ble.util.Constants;
 
 /**
@@ -13,7 +13,7 @@ public interface OnOtaControllerListener {
      Called when a packet is received from the device
      */
     public void onPrepareOTA(Constants.DfuFirmwareTypes which);
-    public void packetReceived(ResponseData packet);
+    public void packetReceived(BLEResponseData packet);
     public void connectionStateChanged(boolean isConnected);
     public void onDFUStarted();
     public void onDFUCancelled();

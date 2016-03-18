@@ -4,7 +4,6 @@
 
 package net.medcorp.library.ble.ble;
 
-import android.annotation.TargetApi;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -18,28 +17,27 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
+import net.medcorp.library.ble.event.BLEConnectionStateChangedEvent;
+import net.medcorp.library.ble.event.BLEFirmwareVersionReceivedEvent;
+import net.medcorp.library.ble.event.BLEResponseDataEvent;
 import net.medcorp.library.ble.exception.BLEUnstableException;
 import net.medcorp.library.ble.kernel.MEDBT;
-import net.medcorp.library.ble.listener.OnConnectListener;
-import net.medcorp.library.ble.listener.OnDataReceivedListener;
-import net.medcorp.library.ble.listener.OnExceptionListener;
-import net.medcorp.library.ble.listener.OnFirmwareVersionListener;
-import net.medcorp.library.ble.model.request.RequestData;
+import net.medcorp.library.ble.model.request.BLERequestData;
 import net.medcorp.library.ble.model.response.DataFactory;
-import net.medcorp.library.ble.model.response.ResponseData;
+import net.medcorp.library.ble.model.response.BLEResponseData;
 import net.medcorp.library.ble.util.Constants;
 import net.medcorp.library.ble.util.Optional;
 import net.medcorp.library.ble.util.QueuedMainThreadHandler;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.binary.StringUtils;
+import org.greenrobot.eventbus.EventBus;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -58,7 +56,6 @@ import java.util.UUID;
  * WARNING ! DO NOT RENAME OF MOVE THIS CLASS, BECAUSE IT HAVE TO BE DECLARED IN THE MANIFEST
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
  */
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class MEDBTService extends Service {
 
 	/**
@@ -74,20 +71,12 @@ public class MEDBTService extends Service {
 
 	private QueuedMainThreadHandler queuedMainThread;
 
-	private OnDataReceivedListener dataReceivedListener;
-
-	private OnConnectListener onConnectListener;
-
-	private OnExceptionListener onExceptionListener;
-
-	private OnFirmwareVersionListener onFirmwareVersionListener;
-
 	private static final int RETRY_DELAY = 3000;
 
 	private GattAttributesDataSource dataSource;
 
 	private  String bluetoothVersion = null;
-	private  String softwareVersion = null;
+	private  String mcuVersion = null;
 
 	/**
 	 * This binder is the bridge between the ImazeBTImpl and this Service
@@ -98,8 +87,8 @@ public class MEDBTService extends Service {
 		/**
 		 * Sets all the required callbacks
 		 */
-		public void initialize(OnDataReceivedListener dataReceived, OnConnectListener connect, OnExceptionListener exception, OnFirmwareVersionListener firmware, GattAttributesDataSource source){
-			MEDBTService.this.initialize(dataReceived, connect, exception ,firmware,source);
+		public void initialize(GattAttributesDataSource source){
+			MEDBTService.this.initialize(source);
 		}
 
 		/**
@@ -164,7 +153,7 @@ public class MEDBTService extends Service {
 		 * Sends a request to the device that supports the given service (if any)
 		 * @param request
 		 */
-		public void sendRequest(RequestData request){
+		public void sendRequest(BLERequestData request){
 			MEDBTService.this.sendRequest(request);
 		}
 
@@ -183,7 +172,7 @@ public class MEDBTService extends Service {
 		 */
 		public String getSoftwareVersion()
 		{
-			return softwareVersion;
+			return mcuVersion;
 		}
 
 		/**
@@ -217,22 +206,7 @@ public class MEDBTService extends Service {
 		return super.onUnbind(intent);
 	}
 
-	/**
-	 * Initializes a reference to the local Bluetooth adapter.
-	 * @param dataReceived - called when data is received
-	 * @param connect - called when a device connects
-	 * @param exception - called when an unrecoverable exception occurs
-	 */
-	private boolean initialize(OnDataReceivedListener dataReceived, OnConnectListener connect, OnExceptionListener exception,OnFirmwareVersionListener firmware, GattAttributesDataSource source) {
-
-		dataReceivedListener = dataReceived;
-
-		onConnectListener = connect;
-
-		onExceptionListener = exception;
-
-		onFirmwareVersionListener = firmware;
-
+	private boolean initialize(GattAttributesDataSource source) {
 
 		queuedMainThread = QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.MEDBT);
 
@@ -407,11 +381,11 @@ public class MEDBTService extends Service {
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
 				Log.e(MEDBT.TAG, "Disconnected from GATT server : " + address);
-
-				if(onConnectListener !=null && gatt!=null) onConnectListener.onConnectionStateChanged(false,address);
+                EventBus.getDefault().post(new BLEConnectionStateChangedEvent(false, address));
 
 				//close this server for next reconnect!!!
-				if(gatt!=null) {refreshDeviceCache(gatt);gatt.close();}
+				refreshDeviceCache(gatt);
+                gatt.close();
 				bluetoothGattMap.remove(address);
 				//we don't know why the Gatt server disconnected, so no need again connect, for example: BLE devices power off or go away
 				return;
@@ -494,14 +468,14 @@ public class MEDBTService extends Service {
 			}
 
 			if(!characteristicChosen){
-				Log.w(MEDBT.TAG,"No characteristic chosen, maybe the bluetooth is unstable : "+address);
-				onExceptionListener.onException(new BLEUnstableException());
+				Log.w(MEDBT.TAG, "No characteristic chosen, maybe the bluetooth is unstable : " + address);
+                EventBus.getDefault().post(new BLEUnstableException());
 			}
 			else
 			{
 				//here only connect one SERVICE, the first SERVICE by scan to find out
 				bluetoothGattMap.put(gatt.getDevice().getAddress(), gatt);
-				if(onConnectListener !=null && gatt!=null) onConnectListener.onConnectionStateChanged(true,gatt.getDevice().getAddress());
+                EventBus.getDefault().post(new BLEConnectionStateChangedEvent(true, gatt.getDevice().getAddress()));
 			}
 
 		}
@@ -514,13 +488,13 @@ public class MEDBTService extends Service {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				if (dataSource.getDeviceInfoBluetoothVersion().equals(characteristic.getUuid())){
 					bluetoothVersion = StringUtils.newStringUsAscii(characteristic.getValue());
-					Log.i(MEDBT.TAG,"FIRMWARE VERSION **************** "+ bluetoothVersion);
-					onFirmwareVersionListener.firmwareVersionReceived(Constants.DfuFirmwareTypes.APPLICATION, bluetoothVersion);
+					Log.i(MEDBT.TAG, "FIRMWARE VERSION **************** " + bluetoothVersion);
+                    EventBus.getDefault().post(new BLEFirmwareVersionReceivedEvent(Constants.DfuFirmwareTypes.BLUETOOTH, bluetoothVersion));
 				}
 				else if (dataSource.getDeviceInfoSoftwareVersion().equals(characteristic.getUuid())){
-					softwareVersion = StringUtils.newStringUsAscii(characteristic.getValue());
-					Log.i(MEDBT.TAG,"SOFTWARE VERSION **************** "+ softwareVersion);
-					onFirmwareVersionListener.firmwareVersionReceived(Constants.DfuFirmwareTypes.SOFTDEVICE, softwareVersion);
+					mcuVersion = StringUtils.newStringUsAscii(characteristic.getValue());
+					Log.i(MEDBT.TAG,"SOFTWARE VERSION **************** "+ mcuVersion);
+                    EventBus.getDefault().post(new BLEFirmwareVersionReceivedEvent(Constants.DfuFirmwareTypes.MCU, mcuVersion));
 				}
 			}
 		}
@@ -576,9 +550,8 @@ public class MEDBTService extends Service {
 	 */
 	private void dataReceived(final BluetoothGattCharacteristic characteristic, final String address) {
 
-		ResponseData data = DataFactory.fromBluetoothGattCharacteristic(dataSource, characteristic, address);
-
-		if(data!=null&& dataReceivedListener !=null) dataReceivedListener.onDataReceived(data);
+		BLEResponseData data = DataFactory.fromBluetoothGattCharacteristic(dataSource, characteristic, address);
+        EventBus.getDefault().post(new BLEResponseDataEvent(data));
 	}
 
 	/**
@@ -688,7 +661,7 @@ public class MEDBTService extends Service {
 		return new Optional<String>();
 	}
 
-	private void sendRequest(RequestData request) {
+	private void sendRequest(BLERequestData request) {
 		UUID serviceUUID = request.getServiceUUID();
 		UUID characteristicUUID = request.getInputCharacteristicUUID();
 		final byte[] rawData = request.getRawData();
@@ -749,10 +722,6 @@ public class MEDBTService extends Service {
 
 	}
 
-	/**
-	 * This function will send a read request to the device in order to see if it is still active
-	 * @return
-	 */
 	private void ping()
 	{
 		if(bluetoothGattMap == null || bluetoothGattMap.isEmpty())  {

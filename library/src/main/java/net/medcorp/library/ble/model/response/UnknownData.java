@@ -3,7 +3,7 @@ package net.medcorp.library.ble.model.response;
 /**
  * Created by karl-john on 26/2/16.
  */
-public class UnknownData implements ResponseData {
+public class UnknownData implements BLEResponseData {
 
     @Override
     public String getAddress() {

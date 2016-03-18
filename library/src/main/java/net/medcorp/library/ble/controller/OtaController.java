@@ -30,11 +30,6 @@ public interface OtaController {
     void setManualMode(boolean manualmode);
 
     /**
-     * get in charge of ConnectionController
-     */
-    void switch2OtaController();
-
-    /**
      * set hight level listener, it should be a activity (OTA controller view:Activity or one fragment)
      */
     void setOnOtaControllerListener(OnOtaControllerListener listener);
@@ -52,14 +47,6 @@ public interface OtaController {
 
     void setState(Constants.DFUControllerState state);
 
-    void switch2SyncController();
-
-    /**
-     * when OTA done successful or failure, reset it to normal mode
-     * switch2SyncController: true / false ,which controller will be in charge of connectionController：
-     * syncController or otaController
-     *
-     */
     void reset(boolean switch2SyncController);
 
     /**

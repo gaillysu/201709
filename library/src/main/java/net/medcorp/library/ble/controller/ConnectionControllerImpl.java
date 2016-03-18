@@ -3,23 +3,23 @@ package net.medcorp.library.ble.controller;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import net.medcorp.library.ble.ble.GattAttributes;
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
-import net.medcorp.library.ble.exception.BaseBLEException;
+import net.medcorp.library.ble.event.BLEConnectionStateChangedEvent;
+import net.medcorp.library.ble.event.BLEFirmwareVersionReceivedEvent;
+import net.medcorp.library.ble.event.BLENotificationEvent;
+import net.medcorp.library.ble.event.BLEResponseDataEvent;
+import net.medcorp.library.ble.event.BLESearchEvent;
 import net.medcorp.library.ble.kernel.MEDBT;
 import net.medcorp.library.ble.kernel.MEDBTImpl;
-import net.medcorp.library.ble.listener.OnConnectListener;
-import net.medcorp.library.ble.listener.OnDataReceivedListener;
-import net.medcorp.library.ble.listener.OnExceptionListener;
-import net.medcorp.library.ble.listener.OnFirmwareVersionListener;
-import net.medcorp.library.ble.model.request.RequestData;
-import net.medcorp.library.ble.model.response.ResponseData;
+import net.medcorp.library.ble.model.request.BLERequestData;
 import net.medcorp.library.ble.util.Constants;
 import net.medcorp.library.ble.util.Optional;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import java.util.TimerTask;
 /**
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
  */
-/*package*/ class ConnectionControllerImpl implements ConnectionController, OnConnectListener, OnExceptionListener, OnDataReceivedListener, OnFirmwareVersionListener {
+/*package*/ class ConnectionControllerImpl implements ConnectionController {
 
     private Timer mAutoReconnectTimer = null;
     private int  mTimerIndex = 0;
@@ -44,11 +44,6 @@ import java.util.TimerTask;
 
     //This boolean is the only reliable way to know if we are connected or not
     private boolean mIsConnected = false;
-
-    private Optional<OnExceptionListener> onExceptionListener = new Optional<>();
-    private Optional<OnDataReceivedListener> onDataReceivedListener = new Optional<>();
-    private Optional<OnConnectListener> onConnectListener = new Optional<>();
-    private Optional<OnFirmwareVersionListener> onFirmwareVersionListener = new Optional<>();
 
     private Context context;
     private MEDBT medBT;
@@ -65,10 +60,7 @@ import java.util.TimerTask;
     public ConnectionControllerImpl(Context ctx, GattAttributesDataSource dataSource){
         context = ctx;
         medBT = new MEDBTImpl(context, dataSource);
-        medBT.setOnConnectListener(this);
-        medBT.setOnExceptionListener(this);
-        medBT.setOnDataReceivedListener(this);
-        medBT.setOnFirmwareVersionListener(this);
+        EventBus.getDefault().register(this);
         //I remove it, when app starts, it will not auto connect watch,  my code will invoke @getModel().startConnectToWatch(boolean) function when need connect watch
         //This timer will retry to connect at given intervals
         //restartAutoReconnectTimer();
@@ -87,10 +79,10 @@ import java.util.TimerTask;
                     mTimerIndex++;
                     if (mTimerIndex >= mReConnectTimerPattern.length - 1) {
                         mTimerIndex = mReConnectTimerPattern.length - 1;
-                        if (onConnectListener.notEmpty()) onConnectListener.get().onSearchFailure();
+                        EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCH_FAILURE));
                         Log.w(MEDBT.TAG, "connection timeout(3 minutes),stop searching.");
                     } else {
-                        Log.w(MEDBT.TAG, "Connection lost, reconnecting in " + mReConnectTimerPattern[mTimerIndex-1] / 1000 + "s");
+                        Log.w(MEDBT.TAG, "Connection lost, reconnecting in " + mReConnectTimerPattern[mTimerIndex - 1] / 1000 + "s");
                         connect();
                     }
                 }
@@ -101,9 +93,7 @@ import java.util.TimerTask;
 
     @Override
     public void connect() {
-
         List<GattAttributes.SupportedService> servicelist = new ArrayList<GattAttributes.SupportedService>();
-
         if(inOTAMode())
         {
             forgetSavedAddress();
@@ -117,19 +107,20 @@ import java.util.TimerTask;
             preferredAddress.set(getSaveAddress());
         }
         Log.w(MEDBT.TAG, "servicelist:" + servicelist.get(0) + ",address:" + (preferredAddress.isEmpty() ? "null" : preferredAddress.get()));
+
         medBT.startScan(servicelist, preferredAddress);
     }
 
     @Override
     public void reconnect()
     {
-        List<GattAttributes.SupportedService> servicelist = new ArrayList<GattAttributes.SupportedService>();
-        servicelist.add(GattAttributes.SupportedService.SERVICE);
+        List<GattAttributes.SupportedService> serviceList = new ArrayList<GattAttributes.SupportedService>();
+        serviceList.add(GattAttributes.SupportedService.SERVICE);
         Optional<String> preferredAddress = new Optional<String>();
         if(hasSavedAddress()){
             preferredAddress.set(getSaveAddress());
         }
-        medBT.startScan(servicelist, preferredAddress);
+        medBT.startScan(serviceList, preferredAddress);
     }
 
    protected void destroy()
@@ -138,43 +129,31 @@ import java.util.TimerTask;
     }
 
     @Override
-    public void sendRequest(RequestData request) {
+    public void sendRequest(BLERequestData request) {
         medBT.sendRequest(request);
     }
 
     private void currentlyConnected(boolean isConnected) {
         if(isConnected!=mIsConnected) {
-
             mIsConnected = isConnected;
-
             //stop ble scan for only one ble device can get connected
             if(isConnected)
             {
                 medBT.stopScan();
             }
-            //Callback are usually called on the main thread
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-
-                @Override
-                public void run() {
-                    Log.w("MED BT SDK", "Connected : " + mIsConnected);
-                    if(onConnectListener.notEmpty())
-                    {
-                        onConnectListener.get().onConnectionStateChanged(mIsConnected, "");
-                    }
-                }
-            });
+            Log.w("MED BT SDK", "Connected : " + mIsConnected);
+            EventBus.getDefault().post(new BLEConnectionStateChangedEvent(mIsConnected,""));
         }
     }
 
-    @Override
-    public void onConnectionStateChanged(final boolean connected, final String address) {
-
-        if(!address.equals("") && connected == true)
+    @Subscribe
+    public void onEvent(BLEConnectionStateChangedEvent eventData){
+        Log.w("Karl", "On connection state changed @ connection controller");
+        if(!eventData.getAddress().equals("") && eventData.isConnected() == true)
         {
             //firstly connected this SERVICE: such as: first run app, forget this SERVICE
             boolean firstConnected = !hasSavedAddress();
-            setSaveAddress(address);
+            setSaveAddress(eventData.getAddress());
 
             //http://stackoverflow.com/questions/21398766/android-ble-connection-time-interval
             //fix a bug:when BLE OTA done,need repair SERVICE, if not, must twice connect SERVICE that SERVICE can work fine, here use code do repair working or twice connection
@@ -183,61 +162,15 @@ import java.util.TimerTask;
             if((firstConnected || needPair()) && !inOTAMode()) pairDevice();
         }
 
-        currentlyConnected(connected);
-
-        sendNotification(connected);
-
-    }
-
-    @Override
-    public void onSearching() {
-        if(onConnectListener.notEmpty()) onConnectListener.get().onSearching();
-    }
-
-    @Override
-    public void onSearchSuccess() {
-        if(onConnectListener.notEmpty()) onConnectListener.get().onSearchSuccess();
-    }
-
-    @Override
-    public void onSearchFailure() {
-        if(onConnectListener.notEmpty()) onConnectListener.get().onSearchFailure();
-    }
-
-    @Override
-    public void onConnecting() {
-        if(onConnectListener.notEmpty()) onConnectListener.get().onConnecting();
-    }
-
-    @Override
-    public void onException(final BaseBLEException e) {
-        //Callback are usually called on the main thread
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-
-            @Override
-            public void run() {
-                if (onExceptionListener.notEmpty()) {
-                    onExceptionListener.get().onException(e);
-                }
-            }
-        });
+        currentlyConnected(eventData.isConnected());
+        // TODO BLENNotificationEvent is already posted but no subscribers yet
+        EventBus.getDefault().post(new BLENotificationEvent(eventData.isConnected()));
 
     }
 
-    @Override
-    public void onDataReceived(final ResponseData data) {
-
+    @Subscribe
+    public void onEvent(BLEResponseDataEvent eventData){
         currentlyConnected(true);
-        //Callback are usually called on the main thread
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-
-            @Override
-            public void run() {
-                if (onDataReceivedListener.notEmpty())
-                    onDataReceivedListener.get().onDataReceived(data);
-            }
-        });
-
     }
 
     public void setContext(Context context) {
@@ -325,18 +258,11 @@ import java.util.TimerTask;
         }
     }
 
-
-    @Override
-    public void firmwareVersionReceived(final Constants.DfuFirmwareTypes firmwareTypes, final String version) {
+    @Subscribe
+    public void onEvent(BLEFirmwareVersionReceivedEvent event){
         currentlyConnected(true);
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if (onFirmwareVersionListener.notEmpty())
-                    onFirmwareVersionListener.get().firmwareVersionReceived(firmwareTypes, version);
-            }
-        });
     }
+
     @Override
     public void scan()
     {
@@ -345,22 +271,6 @@ import java.util.TimerTask;
         }
        mTimerIndex = 0;
        restartAutoReconnectTimer();
-    }
-
-    private void sendNotification(boolean connected)
-    {
-        // TODO find nice solution for this
-//        if(!Preferences.getLinklossNotification(context))
-//        {
-//            return;
-//        }
-//        NotificationManager nftm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-//        String  title = connected? context.getResources().getString(R.string.notification_connect_title): context.getResources().getString(R.string.notification_disconnect_title);
-//        String  content = connected? context.getResources().getString(R.string.notification_connect_content): context.getResources().getString(R.string.notification_disconnect_content);
-//
-//        Notification notification = new Notification.Builder(context).setContentTitle(title).setContentText(content).build();
-//        notification.defaults = Notification.DEFAULT_VIBRATE;
-//        nftm.notify(connected ? 1 : 2, notification);
     }
 
     @Override
@@ -445,22 +355,4 @@ import java.util.TimerTask;
         }
         return false;
     }
-
-    @Override
-    public void setOnExceptionListener(OnExceptionListener listener){
-        this.onExceptionListener.set(listener);
-    }
-    @Override
-    public void setOnDataReceivedListener(OnDataReceivedListener listener){
-        this.onDataReceivedListener.set(listener);
-    }
-    @Override
-    public void setOnConnectListener(OnConnectListener listener){
-        this.onConnectListener.set(listener);
-    }
-    @Override
-    public void setOnFirmwareVersionListener(OnFirmwareVersionListener listener){
-        this.onFirmwareVersionListener.set(listener);
-    }
-
 }
