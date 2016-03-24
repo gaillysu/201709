@@ -9,7 +9,8 @@ public class BLESearchEvent {
         ON_SEARCHING,
         ON_SEARCH_SUCCESS,
         ON_SEARCH_FAILURE,
-        ON_CONNECTING
+        ON_CONNECTING,
+        ON_BLUETOOTH_OFF
     }
 
     private final SEARCH_EVENT searchEvent;

@@ -21,10 +21,10 @@ import net.medcorp.library.ble.ble.GattAttributes;
 import net.medcorp.library.ble.ble.GattAttributes.SupportedService;
 import net.medcorp.library.ble.ble.MEDBTService;
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
+import net.medcorp.library.ble.event.BLEBluetoothOffEvent;
 import net.medcorp.library.ble.event.BLEExceptionEvent;
 import net.medcorp.library.ble.event.BLESearchEvent;
 import net.medcorp.library.ble.exception.BLENotSupportedException;
-import net.medcorp.library.ble.exception.BaseBLEException;
 import net.medcorp.library.ble.exception.BluetoothDisabledException;
 import net.medcorp.library.ble.model.request.BLERequestData;
 import net.medcorp.library.ble.util.Optional;
@@ -106,16 +106,18 @@ public class MEDBTImpl implements MEDBT {
 		
 		try {
 			initBluetoothAdapter();
-		} catch (BaseBLEException e) {
+		} catch (BluetoothDisabledException e) {
+            EventBus.getDefault().post(new BLEBluetoothOffEvent());
+        } catch (BLENotSupportedException e) {
             EventBus.getDefault().post(new BLEExceptionEvent(e));
-		}
-	}
+        }
+    }
 
 
     @Override
 	public synchronized void startScan(final List<SupportedService> serviceList, final Optional<String> preferredAddress) {
 		if(isScanning){
-            Log.i(TAG,"Scanning......return ******");
+            Log.i(TAG, "Scanning......return ******");
             return;
         }
         //If we're already conected to this address, no need to go any further
@@ -129,7 +131,10 @@ public class MEDBTImpl implements MEDBT {
 		//We check if bluetooth is enabled and/or if the device isn't ble capable
 		try {
 			initBluetoothAdapter();
-        } catch (BaseBLEException e) {
+        } catch (BluetoothDisabledException e) {
+            EventBus.getDefault().post(new BLEBluetoothOffEvent());
+            return;
+        } catch (BLENotSupportedException e) {
             EventBus.getDefault().post(new BLEExceptionEvent(e));
             return;
         }
@@ -226,26 +231,21 @@ public class MEDBTImpl implements MEDBT {
                 //Also if a pairing is known to be needed, It should have already been paired : !GattAttributes.shouldPairBeforeUse(advertisedUUIDs) || (GattAttributes.shouldPairBeforeUse(advertisedUUIDs) && device.getBondState()==BluetoothDevice.BOND_BONDED)
                 // Either : No need to pair before use Or : (Need to pair before use and we are actually paired)
                 if ((mCurrentService.isEmpty() || !mCurrentService.get().isOneOfThoseServiceConnected(advertisedUUIDs))
-                        && !GattAttributes.supportedBLEServiceByEnum(dataSource, advertisedUUIDs, mSupportServicelist).isEmpty()
-					 )
-                {
+                        && !GattAttributes.supportedBLEServiceByEnum(dataSource, advertisedUUIDs, mSupportServicelist).isEmpty()) {
 
                     Log.d(TAG, "Device "+deviceAddress+" found to support service : "+GattAttributes.supportedBLEServiceByEnum(dataSource,advertisedUUIDs, mSupportServicelist).get(0));
 
                     EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCH_SUCCESS));
                     //If yes, let's bind this device !
-                    if(mCurrentService.isEmpty())
+                    if(mCurrentService.isEmpty()) {
                         bindNewService(deviceAddress);
-                    else
-                    {
+                    } else {
                         EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
                         mCurrentService.get().connect(deviceAddress);
                     }
-
                 }
             }
-            if(!mPreviousAddress.contains(deviceAddress))
-            {
+            if(!mPreviousAddress.contains(deviceAddress)) {
                 mPreviousAddress.add(deviceAddress);
             }
         }
@@ -260,7 +260,7 @@ public class MEDBTImpl implements MEDBT {
 		if(mCurrentService.notEmpty()) {
 			mCurrentService.get().sendRequest(request);
 		} else {
-			 Log.w(MEDBT.TAG, "Send failed. Service not started" );
+			 Log.w(MEDBT.TAG, "Send failed. Service not started");
              ////fixed by Gailly,rebind service if empty, perhaps kill service and right now reconnect watch, but the service doesn't get ready
              if(mPreferredAddress.notEmpty()){
 				 bindNewService(mPreferredAddress.get());
@@ -351,10 +351,10 @@ public class MEDBTImpl implements MEDBT {
 			&& mCurrentService.get().isConnected(deviceAddress)
 			//And the given device address is not null
 			&& deviceAddress!=null
-			); 
+			);
 			//Congrats ! No need to connect, the device is already connected !
 	}
-	
+
 	/**
 	 * This function will create a new Service (if no service currently exists)
 	 * @param deviceAddress
@@ -364,23 +364,23 @@ public class MEDBTImpl implements MEDBT {
 		//We will create a Service that will handle the actual Bluetooth low level job
 		Intent intent = new Intent(context,
 				MEDBTService.class);
-		
+
 		//This object will be the bridge between this object and the Service
 		//It is used to retreive the binder and unbind the service
 		mCurrentServiceConnection = new Optional<ServiceConnection>( new ServiceConnection() {
-			
+
 			@Override
 			public void onServiceDisconnected(ComponentName name) {
 				Log.v(MEDBT.TAG, name+" Service disconnected");
 			}
-			
+
 			@Override
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.v(MEDBT.TAG, name+" Service connected");
 
 				//This object is the bridge to get informations and control the service
 				mCurrentService = new Optional<MEDBTService.LocalBinder> ( (MEDBTService.LocalBinder) service );
-				
+
 				//We launch a conenction to the given device
 				mCurrentService.get().initialize(dataSource);
 
@@ -395,12 +395,12 @@ public class MEDBTImpl implements MEDBT {
 		context.getApplicationContext().bindService(intent,mCurrentServiceConnection.get(),Activity.BIND_AUTO_CREATE);
 		Log.v(MEDBT.TAG, "context.bindService");
 	}
-	
+
 	private BluetoothAdapter initBluetoothAdapter() throws BLENotSupportedException, BluetoothDisabledException {
 		//If BLE is not supported, we throw an error
 		if (!context.getPackageManager().hasSystemFeature(
 				PackageManager.FEATURE_BLUETOOTH_LE)) {
-			throw new BLENotSupportedException(); 
+			throw new BLENotSupportedException();
 		}
 
 		// Initializes a Bluetooth adapter. For API level 18 and above, get a

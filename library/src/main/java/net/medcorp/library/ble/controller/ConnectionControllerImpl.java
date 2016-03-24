@@ -142,7 +142,9 @@ import java.util.TimerTask;
                 medBT.stopScan();
             }
             Log.w("MED BT SDK", "Connected : " + mIsConnected);
-            EventBus.getDefault().post(new BLEConnectionStateChangedEvent(mIsConnected,""));
+            if (!mIsConnected){
+                EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
+            }
         }
     }
 
