@@ -27,7 +27,7 @@ class MEDRawDataImpl extends MEDRawData {
 		mAddress = address;
 		mUuid = characteristic.getUuid();
 		mRawData = characteristic.getValue();
-		Log.i(MEDBT.TAG, new String(Hex.encodeHex(mRawData)));
+		Log.i(MEDBT.TAG, "Receive Data " + new String(Hex.encodeHex(mRawData)));
 	}
 
 	@Override

@@ -10,11 +10,11 @@ import java.util.UUID;
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
  */
 
-public abstract class BLERequestData {
+public abstract class RequestData {
 
     private GattAttributesDataSource dataSource;
 
-    public BLERequestData(GattAttributesDataSource dataSource) {
+    public RequestData(GattAttributesDataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -38,19 +38,20 @@ public abstract class BLERequestData {
         return dataSource.getNotificationCharacteristic();
     }
 
-    public UUID getOTAServiceUUID() {
+    public UUID getOTAServiceUUID()
+    {
         return dataSource.getOtaService();
     }
 
-    public UUID getOTAControlCharacteristicUUID() {
-        return dataSource.getOtaControlCharacteristic();
-    }
-
-    public UUID getOTACallbackCharacteristicUUID() {
+    public UUID getOTACallbackCharacteristicUUID()
+    {
         return dataSource.getOtaCallbackCharacteristic();
     }
 
-
+    public UUID getOTAControlCharacteristicUUID()
+    {
+        return dataSource.getOtaControlCharacteristic();
+    }
 
     /**
      * @return the raw data to be sent
