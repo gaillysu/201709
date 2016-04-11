@@ -10,11 +10,11 @@ import java.util.UUID;
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
  */
 
-public abstract class RequestData {
+public abstract class BLERequestData {
 
     private GattAttributesDataSource dataSource;
 
-    public RequestData(GattAttributesDataSource dataSource) {
+    public BLERequestData(GattAttributesDataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -67,6 +67,4 @@ public abstract class RequestData {
      * @return the command 's value
      */
     public abstract byte getHeader();
-
-
 }
