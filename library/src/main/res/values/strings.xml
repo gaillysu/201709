@@ -1,2 +1,5 @@
 <resources>
+    <string name="med_library_permission_title">Permission Request</string>
+    <string name="med_library_permission_text">One or more permissions are required to make the application function properly.</string>
+
 </resources>
