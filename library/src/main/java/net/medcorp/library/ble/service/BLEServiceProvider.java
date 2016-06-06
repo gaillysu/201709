@@ -139,6 +139,7 @@ public class BLEServiceProvider {
             public void run() {
                 //Trigger our periodic notification once devices are connected
                 mHandler.removeCallbacks(mNotifyRunnable);
+                mConnectedDevices.add(device);
                 if (!mConnectedDevices.isEmpty()) {
                     mHandler.post(mNotifyRunnable);
                 }
@@ -160,7 +161,6 @@ public class BLEServiceProvider {
             super.onConnectionStateChange(device, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 postDeviceChange(device, true);
-
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 postDeviceChange(device, false);
             }
@@ -212,4 +212,6 @@ public class BLEServiceProvider {
             }
         }
     };
+
+
 }
