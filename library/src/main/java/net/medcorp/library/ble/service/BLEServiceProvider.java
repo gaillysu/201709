@@ -3,7 +3,6 @@ package net.medcorp.library.ble.service;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
@@ -31,28 +30,25 @@ import java.util.UUID;
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class BLEServiceProvider {
 
-    private Handler mHandler = new Handler();
+    private Handler handler = new Handler();
 
-    private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
-    private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
-    private BluetoothGattServer mGattServer;
+    private BluetoothLeAdvertiser bluetoothLeAdvertiser;
+    private BluetoothGattServer gattServer;
 
-    private List<BluetoothDevice> mConnectedDevices = new ArrayList<>();
+    private List<BluetoothDevice> connectedDevices = new ArrayList<>();
 
     private final UUID serviceUUID = UUID.fromString("F0BA3124-6CAC-4C99-9089-4B0A1DF45002");
     private final UUID controlPointCharacteristics = UUID.fromString("F0BA3126-6CAC-4C99-9089-4B0A1DF45002");
     private final UUID dataSourceCharacteristicsUUID = UUID.fromString("F0BA3127-6CAC-4C99-9089-4B0A1DF45002");
     private final UUID alertSourceUUID = UUID.fromString("F0BA3125-6CAC-4C99-9089-4B0A1DF45002");
 
-
     public BLEServiceProvider(Context context) {
-        mBluetoothManager = (BluetoothManager) context.getSystemService(context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = mBluetoothManager.getAdapter();
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(context.BLUETOOTH_SERVICE);
+        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (mBluetoothAdapter.isMultipleAdvertisementSupported()) {
-                mBluetoothLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
-                mGattServer = mBluetoothManager.openGattServer(context, mGattServerCallback);
+            if (bluetoothAdapter.isMultipleAdvertisementSupported()) {
+                bluetoothLeAdvertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
+                gattServer = bluetoothManager.openGattServer(context, mGattServerCallback);
                 initServer();
                 return;
             }
@@ -75,20 +71,21 @@ public class BLEServiceProvider {
         service.addCharacteristic(dataSourceCharacteristics);
         service.addCharacteristic(alertSourceCharacteristics);
         service.addCharacteristic(offsetCharacteristic);
-        mGattServer.addService(service);
+        gattServer.addService(service);
     }
 
     public void closeServer(){
-        mHandler.removeCallbacks(mNotifyRunnable);
-
-        if (mGattServer == null) return;
-
-        mGattServer.close();
+        handler.removeCallbacks(notifyRunnable);
+        if (gattServer == null) {
+            return;
+        }
+        gattServer.close();
     }
 
     public void startAdvertising() {
-        if (mBluetoothLeAdvertiser == null) return;
-
+        if (bluetoothLeAdvertiser == null) {
+            return;
+        }
         AdvertiseSettings settings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                 .setConnectable(true)
@@ -100,27 +97,27 @@ public class BLEServiceProvider {
                 .setIncludeDeviceName(true)
                 .addServiceUuid(new ParcelUuid(serviceUUID))
                 .build();
-        mBluetoothLeAdvertiser.startAdvertising(settings, data, mAdvertiseCallback);
+        bluetoothLeAdvertiser.startAdvertising(settings, data, advertiseCallback);
     }
 
     public void stopAdvertising() {
-        if (mBluetoothLeAdvertiser == null) return;
-
-        mBluetoothLeAdvertiser.stopAdvertising(mAdvertiseCallback);
+        if (bluetoothLeAdvertiser == null) {
+            return;
+        }
+        bluetoothLeAdvertiser.stopAdvertising(advertiseCallback);
     }
 
     private void notifyConnectedDevices() {
-        for (BluetoothDevice device : mConnectedDevices) {
-
-            BluetoothGattCharacteristic readCharacteristic = mGattServer.getService(serviceUUID)
+        for (BluetoothDevice device : connectedDevices) {
+            BluetoothGattCharacteristic readCharacteristic = gattServer.getService(serviceUUID)
                     .getCharacteristic(controlPointCharacteristics);
             // TODO Send something?
-//            readCharacteristic.setValue(getStoredValue());
-            mGattServer.notifyCharacteristicChanged(device, readCharacteristic, false);
+            readCharacteristic.setValue(serviceUUID.toString());
+            gattServer.notifyCharacteristicChanged(device, readCharacteristic, false);
         }
     }
 
-    private AdvertiseCallback mAdvertiseCallback = new AdvertiseCallback() {
+    private AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
             Log.i("Karl", "Peripheral Advertise Started.");
@@ -134,24 +131,24 @@ public class BLEServiceProvider {
     };
 
     private void postDeviceChange(final BluetoothDevice device, final boolean toAdd) {
-        mHandler.post(new Runnable() {
+        handler.post(new Runnable() {
             @Override
             public void run() {
                 //Trigger our periodic notification once devices are connected
-                mHandler.removeCallbacks(mNotifyRunnable);
-                mConnectedDevices.add(device);
-                if (!mConnectedDevices.isEmpty()) {
-                    mHandler.post(mNotifyRunnable);
+                handler.removeCallbacks(notifyRunnable);
+                connectedDevices.add(device);
+                if (!connectedDevices.isEmpty()) {
+                    handler.post(notifyRunnable);
                 }
             }
         });
     }
 
-    private Runnable mNotifyRunnable = new Runnable() {
+    private Runnable notifyRunnable = new Runnable() {
         @Override
         public void run() {
             notifyConnectedDevices();
-            mHandler.postDelayed(this, 2000);
+            handler.postDelayed(this, 2000);
         }
     };
 
@@ -169,24 +166,6 @@ public class BLEServiceProvider {
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-            if (dataSourceCharacteristicsUUID.equals(characteristic.getUuid())) {
-                // todo Read response.
-//                mGattServer.sendResponse(device,
-//                        requestId,
-//                        BluetoothGatt.GATT_SUCCESS,
-//                        0,
-//                        DeviceProfile.bytesFromInt(mTimeOffset));
-            }
-
-            if (alertSourceUUID.equals(characteristic.getUuid())) {
-                // todo Read response.
-            }
-
-            mGattServer.sendResponse(device,
-                    requestId,
-                    BluetoothGatt.GATT_FAILURE,
-                    0,
-                    null);
         }
 
         @Override
@@ -194,20 +173,6 @@ public class BLEServiceProvider {
             super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
             Log.i("Karl", "onCharacteristicWriteRequest " + characteristic.getUuid().toString());
             if (controlPointCharacteristics.equals(characteristic.getUuid())) {
-                if (responseNeeded) {
-                    // todo Read response.
-                    mGattServer.sendResponse(device,
-                            requestId,
-                            BluetoothGatt.GATT_SUCCESS,
-                            0,
-                            value);
-                }
-
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                    }
-                });
                 notifyConnectedDevices();
             }
         }
