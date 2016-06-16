@@ -30,6 +30,7 @@ public class GattAttributes {
     
     public static boolean supportedBLECharacteristic(GattAttributesDataSource source,UUID uuid){
         if (uuid.equals(source.getCallbackCharacteristic())
+                || uuid.equals(source.getNotificationCharacteristic())
                 || uuid.equals(source.getOtaCallbackCharacteristic())
                 || uuid.equals(source.getOtaCharacteristic())) {
             return true;
