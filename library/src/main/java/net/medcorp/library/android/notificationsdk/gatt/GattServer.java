@@ -701,11 +701,10 @@ public class GattServer
         }
         
         private void onHandleNotificationRequested(final Bundle bundle) {
-            Log.d(NotificationHandler.TAG, "Handling a message (notification requested)");
+            Log.d(NotificationHandler.TAG, "Handling a message (notification requested) Je bana stinkt  ");
             if (bundle == null || bundle.getByteArray("payload") == null || bundle.getParcelable("device") == null) {
                 Log.w(NotificationHandler.TAG, "Message is missing extras");
-            }
-            else {
+            } else {
                 final ByteBuffer wrap = ByteBuffer.wrap(bundle.getByteArray("payload"));
                 final BluetoothDevice bluetoothDevice = (BluetoothDevice)bundle.getParcelable("device");
                 final Integer value = bundle.getInt("type");
@@ -721,7 +720,7 @@ public class GattServer
                 }
                 if (!this.isSubscribed(bluetoothDevice, value)) {
                     Log.w(NotificationHandler.TAG, "Attempt to notify a device that is not subscribed");
-                    return;
+//                    return;
                 }
                 Log.d(NotificationHandler.TAG, bluetoothDevice.getAddress() + " - Payload pushed to queue");
                 this.mQueueMap.get(bluetoothDevice).add((Pair<ByteBuffer, Integer>)new Pair((Object)wrap, (Object)value));
