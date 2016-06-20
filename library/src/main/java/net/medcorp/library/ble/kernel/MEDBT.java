@@ -3,6 +3,8 @@
  */
 package net.medcorp.library.ble.kernel;
 
+import android.bluetooth.BluetoothDevice;
+
 import net.medcorp.library.ble.ble.GattAttributes;
 import net.medcorp.library.ble.exception.BLENotSupportedException;
 import net.medcorp.library.ble.exception.BluetoothDisabledException;
@@ -10,6 +12,7 @@ import net.medcorp.library.ble.model.request.BLERequestData;
 import net.medcorp.library.ble.util.Optional;
 
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -88,4 +91,6 @@ public interface MEDBT {
      * Pings the currently connected device (if any) to check it is actually connected
      */
     void ping();
+
+    Set<BluetoothDevice> getDevices();
 }

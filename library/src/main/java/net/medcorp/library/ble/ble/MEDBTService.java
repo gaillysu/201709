@@ -376,8 +376,6 @@ public class MEDBTService extends Service {
 						if (gatt != null) gatt.discoverServices();
 					}
 				}, 200);
-				return;
-
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
 				Log.e(MEDBT.TAG, "Disconnected from GATT server : " + address);
@@ -551,6 +549,7 @@ public class MEDBTService extends Service {
 	private void dataReceived(final BluetoothGattCharacteristic characteristic, final String address) {
 
 		BLEResponseData data = DataFactory.fromBluetoothGattCharacteristic(dataSource, characteristic, address);
+
         EventBus.getDefault().post(new BLEResponseDataEvent(data));
 	}
 

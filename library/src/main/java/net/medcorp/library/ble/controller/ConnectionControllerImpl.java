@@ -24,6 +24,7 @@ import org.greenrobot.eventbus.Subscribe;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -167,7 +168,6 @@ import java.util.TimerTask;
         currentlyConnected(eventData.isConnected());
         // TODO BLENNotificationEvent is already posted but no subscribers yet
         EventBus.getDefault().post(new BLENotificationEvent(eventData.isConnected()));
-
     }
 
     @Subscribe
@@ -328,6 +328,11 @@ import java.util.TimerTask;
         }
     }
 
+    @Override
+    public Set<BluetoothDevice> getDevice() {
+        return medBT.getDevices();
+    }
+
     private boolean createBond(Class btClass, BluetoothDevice btDevice)
             throws Exception {
         Method createBondMethod = btClass.getMethod("createBond");
@@ -349,7 +354,7 @@ import java.util.TimerTask;
             return false;
         }
 
-        BluetoothDevice   device = bluetoothAdapter.getRemoteDevice(getSaveAddress());
+        BluetoothDevice  device = bluetoothAdapter.getRemoteDevice(getSaveAddress());
         int state = device.getBondState();
         Log.i(MEDBT.TAG,"needPair(),current bind state: " + state);
         if(state != BluetoothDevice.BOND_BONDED) {
@@ -357,4 +362,6 @@ import java.util.TimerTask;
         }
         return false;
     }
+
+
 }

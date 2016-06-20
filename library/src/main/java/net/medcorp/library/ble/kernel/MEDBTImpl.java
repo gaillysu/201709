@@ -36,6 +36,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -277,11 +278,16 @@ public class MEDBTImpl implements MEDBT {
             Log.w(MEDBT.TAG, "Ping failed. Service not started" );
         }
     }
-	
-	/*
-	 * (non-Javadoc)
-	 * @see fr.imaze.sdk.ImazeBT#disconnect(java.lang.String)
-	 */
+
+    @Override
+    public Set<BluetoothDevice> getDevices() {
+        return bluetoothAdapter.getBondedDevices();
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see fr.imaze.sdk.ImazeBT#disconnect(java.lang.String)
+     */
 	@Override
 	public void disconnect() {
         //Let's kill the connection in the most violent way possible.

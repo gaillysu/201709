@@ -1,9 +1,12 @@
 package net.medcorp.library.ble.controller;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
 import net.medcorp.library.ble.model.request.BLERequestData;
+
+import java.util.Set;
 
 /**
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
@@ -71,5 +74,5 @@ public interface ConnectionController {
     public void pairDevice();
     public void unPairDevice();
 
-
+    public Set<BluetoothDevice> getDevice();
 }
