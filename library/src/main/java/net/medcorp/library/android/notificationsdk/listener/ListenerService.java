@@ -64,7 +64,7 @@ public class ListenerService extends NotificationListenerService
     }
     
     public ListenerService() {
-        Log.w(TAG,"Hello?");
+        Log.w(TAG,"Listener service!!?");
         this.mKeyMap = (SparseArray<String>)new SparseArray();
         this.mSummaryMap = new HashMap<String, NotificationSummary>();
         this.mArtificialMap = new HashMap<String, NotificationAdapter>();

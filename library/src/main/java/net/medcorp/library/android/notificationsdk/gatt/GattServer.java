@@ -172,6 +172,7 @@ public class GattServer
         public BluetoothReceiver() {
             this.mHandler = new Handler(GattServer.mContext.getMainLooper());
             this.mBluetoothOn = (GattServer.mContext.getSystemService("bluetooth") != null && ((BluetoothManager)GattServer.mContext.getSystemService("bluetooth")).getAdapter() != null && ((BluetoothManager)GattServer.mContext.getSystemService("bluetooth")).getAdapter().isEnabled());
+            Log.w(TAG,"Hello?");
         }
         
         public boolean isBluetoothOn() {
@@ -213,12 +214,14 @@ public class GattServer
     private static class GattReceiver extends BroadcastReceiver
     {
         private static final String TAG;
-        
+
+
         static {
             TAG = "Karl";
         }
         
         private static byte[] getActionsPacket(final NotificationActionList list) {
+
             int n = 1 + 5;
             for (final NotificationAction notificationAction : list.getActions()) {
                 int length;
@@ -394,6 +397,7 @@ public class GattServer
         }
         
         public void onReceive(final Context context, final Intent intent) {
+            Log.w(TAG,"on receive!?");
             if (intent == null || intent.getAction() == null) {
                 Log.w(GattReceiver.TAG, "Received broadcast with no specified action");
                 return;
@@ -443,7 +447,7 @@ public class GattServer
         @Override
         public void onServiceAdded(int status, BluetoothGattService service) {
             super.onServiceAdded(status, service);
-            Log.w(TAG,"Service added  with status " + status);
+            Log.w(TAG,"Service added with status " + status);
         }
 
         private void onAlertDescriptorWriteRequest(final BluetoothDevice bluetoothDevice, final int n, final byte[] array) {
@@ -660,13 +664,14 @@ public class GattServer
         private Map<BluetoothDevice, Boolean> mWaitingMap;
         
         static {
-            TAG = NotificationHandler.class.getSimpleName();
+            TAG = "Karl";
         }
         
         public NotificationHandler() {
             super(GattServer.mContext.getMainLooper());
             this.mQueueMap = new HashMap<BluetoothDevice, Queue<Pair<ByteBuffer, Integer>>>();
             this.mWaitingMap = new HashMap<BluetoothDevice, Boolean>();
+            Log.w(TAG,"Notification handler init");
         }
         
         private boolean isConnected(final BluetoothDevice bluetoothDevice) {
