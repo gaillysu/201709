@@ -196,7 +196,7 @@ public class GattServer
                         break;
                     }
                     case 12: {
-                        if (!this.mBluetoothOn) {
+                         if (!this.mBluetoothOn) {
                             this.mHandler.removeCallbacks(GattServer.mStartRunnable);
                             this.mHandler.removeCallbacks(GattServer.mStopRunnable);
                             this.mHandler.postDelayed(GattServer.mStartRunnable, 5000L);
@@ -215,7 +215,7 @@ public class GattServer
         private static final String TAG;
         
         static {
-            TAG = GattReceiver.class.getSimpleName();
+            TAG = "Karl";
         }
         
         private static byte[] getActionsPacket(final NotificationActionList list) {
@@ -571,12 +571,14 @@ public class GattServer
             switch (n2) {
                 default: {}
                 case 2: {
+                    Log.w("Karl","Put false from data & alert for device: "  + bluetoothDevice.getAddress());
                     GattServer.mSubscribedAlert.put(bluetoothDevice, false);
                     GattServer.mSubscribedData.put(bluetoothDevice, false);
                     GattServer.mDeviceMtus.put(bluetoothDevice, 20);
                     GattServer.mNotificationHandler.put(bluetoothDevice);
                 }
                 case 0: {
+                    Log.w("Karl","Removed from data & alert for device: "  + bluetoothDevice.getAddress());
                     GattServer.mSubscribedAlert.remove(bluetoothDevice);
                     GattServer.mSubscribedData.remove(bluetoothDevice);
                     GattServer.mDeviceMtus.remove(bluetoothDevice);
@@ -709,10 +711,10 @@ public class GattServer
                 final BluetoothDevice bluetoothDevice = (BluetoothDevice)bundle.getParcelable("device");
                 final Integer value = bundle.getInt("type");
                 if (!this.isConnected(bluetoothDevice)) {
-                    if (this.mQueueMap.containsKey(bluetoothDevice)) {
+                    if(this.mQueueMap.containsKey(bluetoothDevice)) {
                         this.mQueueMap.remove(bluetoothDevice);
                     }
-                    if (this.mWaitingMap.containsKey(bluetoothDevice)) {
+                    if(this.mWaitingMap.containsKey(bluetoothDevice)) {
                         this.mWaitingMap.remove(bluetoothDevice);
                     }
                     Log.w(NotificationHandler.TAG, "Attempt to notify a device that is not connected");
@@ -720,7 +722,7 @@ public class GattServer
                 }
                 if (!this.isSubscribed(bluetoothDevice, value)) {
                     Log.w(NotificationHandler.TAG, "Attempt to notify a device that is not subscribed");
-//                    return;
+                    return;
                 }
                 Log.d(NotificationHandler.TAG, bluetoothDevice.getAddress() + " - Payload pushed to queue");
                 this.mQueueMap.get(bluetoothDevice).add((Pair<ByteBuffer, Integer>)new Pair((Object)wrap, (Object)value));
