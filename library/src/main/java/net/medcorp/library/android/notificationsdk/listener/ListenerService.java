@@ -40,6 +40,7 @@ import net.medcorp.library.android.notificationsdk.listener.parcelable.Notificat
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,7 +50,7 @@ import java.util.Set;
 
 public class ListenerService extends NotificationListenerService
 {
-    private static final String TAG;
+    private final String TAG = "Karl";
     private static boolean mRunning;
     private Map<String, NotificationAdapter> mArtificialMap;
     private CallReceiver mCallReceiver;
@@ -58,10 +59,7 @@ public class ListenerService extends NotificationListenerService
     private SparseArray<String> mKeyMap;
     private NotificationReceiver mNotificationReceiver;
     private Map<String, NotificationSummary> mSummaryMap;
-    
-    static {
-        TAG = "Karl";
-    }
+
     
     public ListenerService() {
         Log.w(TAG,"Listener service!!?");
@@ -474,7 +472,7 @@ public class ListenerService extends NotificationListenerService
     
     public void onCreate() {
         super.onCreate();
-        Log.d(ListenerService.TAG, "Listener created");
+        Log.d(TAG, "Listener created");
         GattServer.initialize((Context)this);
         this.mNotificationReceiver = new NotificationReceiver();
         final IntentFilter intentFilter = new IntentFilter();
@@ -494,7 +492,7 @@ public class ListenerService extends NotificationListenerService
     
     public void onDestroy() {
         super.onDestroy();
-        Log.d(ListenerService.TAG, "Listener destroyed");
+        Log.d(TAG, "Listener destroyed");
         ListenerService.mRunning = false;
         this.unregisterReceiver((BroadcastReceiver)this.mCallReceiver);
         this.mCallReceiver = null;
@@ -509,7 +507,7 @@ public class ListenerService extends NotificationListenerService
     }
     
     public void onListenerConnected() {
-        Log.d(ListenerService.TAG, "Listener connected");
+        Log.d(TAG, "Listener connected");
         final StatusBarNotification[] activeNotifications = this.getActiveNotifications();
         for (int length = activeNotifications.length, i = 0; i < length; ++i) {
             this.onNotificationPosted(activeNotifications[i]);
@@ -523,7 +521,7 @@ public class ListenerService extends NotificationListenerService
     }
     
     public void onNotificationPosted(final NotificationAdapter notificationAdapter) {
-        Log.d(ListenerService.TAG, "New event (notification posted)");
+        Log.d(TAG, "New event (notification posted)");
         if (this.matchesFilter(notificationAdapter)) {
             String s;
             if (this.isNotificationStored(notificationAdapter)) {
@@ -536,7 +534,7 @@ public class ListenerService extends NotificationListenerService
             LocalBroadcastManager.getInstance((Context)this).sendBroadcast(new Intent(s).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)this.getNotificationSummary(notificationAdapter)));
             return;
         }
-        Log.d(ListenerService.TAG, "Event has been ignored (filtered)");
+        Log.d(TAG, "Event has been ignored (filtered)");
     }
     
     public void onNotificationRemoved(final StatusBarNotification statusBarNotification) {
@@ -546,9 +544,9 @@ public class ListenerService extends NotificationListenerService
     }
     
     public void onNotificationRemoved(final NotificationAdapter notificationAdapter) {
-        Log.d(ListenerService.TAG, "New event (notification removed)");
+        Log.d(TAG, "New event (notification removed)");
         if (!this.matchesFilter(notificationAdapter)) {
-            Log.d(ListenerService.TAG, "Event has been ignored (filtered)");
+            Log.d(TAG, "Event has been ignored (filtered)");
             return;
         }
         if (this.isNotificationStored(notificationAdapter)) {
@@ -556,7 +554,7 @@ public class ListenerService extends NotificationListenerService
             LocalBroadcastManager.getInstance((Context)this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_REMOVED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)this.getNotificationSummary(notificationAdapter)));
             return;
         }
-        Log.w(ListenerService.TAG, "Removed notification was not stored");
+        Log.w(TAG, "Removed notification was not stored");
     }
     
     public class CallReceiver extends BroadcastReceiver
@@ -566,19 +564,22 @@ public class ListenerService extends NotificationListenerService
         private String mState;
         
         public CallReceiver(final Context context) {
-            this.TAG = CallReceiver.class.getSimpleName();
+            this.TAG = "Karl";
             final TelephonyManager telephonyManager = (TelephonyManager)context.getSystemService("phone");
             this.mNumber = null;
             switch (telephonyManager.getCallState()) {
                 default: {}
                 case 0: {
                     this.mState = TelephonyManager.EXTRA_STATE_IDLE;
+                    break;
                 }
                 case 1: {
                     this.mState = TelephonyManager.EXTRA_STATE_RINGING;
+                    break;
                 }
                 case 2: {
                     this.mState = TelephonyManager.EXTRA_STATE_OFFHOOK;
+                    break;
                 }
             }
         }
@@ -631,35 +632,35 @@ public class ListenerService extends NotificationListenerService
                 Log.w(this.TAG, "Broadcast is missing extras");
                 return;
             }
-            final String string = extras.get("state").toString();
-            String string2;
+            final String status = extras.get("state").toString();
+            String phoneNumber;
             if (extras.get("incoming_number") != null) {
-                string2 = extras.get("incoming_number").toString();
+                phoneNumber = extras.get("incoming_number").toString();
             }
             else {
-                string2 = null;
+                phoneNumber = null;
             }
-            if (TelephonyManager.EXTRA_STATE_IDLE.equals(string)) {
+            if (TelephonyManager.EXTRA_STATE_IDLE.equals(status)) {
                 if (TelephonyManager.EXTRA_STATE_RINGING.equals(this.mState)) {
                     this.onReceiveMissedCall(context, this.mNumber);
                 }
-                this.mNumber = string2;
+                this.mNumber = phoneNumber;
                 this.mState = TelephonyManager.EXTRA_STATE_IDLE;
                 return;
             }
-            if (TelephonyManager.EXTRA_STATE_RINGING.equals(string)) {
-                this.mNumber = string2;
-                if (TelephonyManager.EXTRA_STATE_IDLE.equals(this.mState)) {
+            if (TelephonyManager.EXTRA_STATE_RINGING.equals(status)) {
+                this.mNumber = phoneNumber;
+                if (TelephonyManager.EXTRA_STATE_IDLE.equals(this.mState) || TelephonyManager.EXTRA_STATE_OFFHOOK.equals(this.mState)) {
                     this.onReceiveIncomingCall(context, this.mNumber);
                 }
                 this.mState = TelephonyManager.EXTRA_STATE_RINGING;
                 return;
             }
-            if (TelephonyManager.EXTRA_STATE_OFFHOOK.equals(string)) {
+            if (TelephonyManager.EXTRA_STATE_OFFHOOK.equals(status)) {
                 if (TelephonyManager.EXTRA_STATE_RINGING.equals(this.mState)) {
                     this.onReceiveOngoingCall(context, this.mNumber);
                 }
-                this.mNumber = string2;
+                this.mNumber = phoneNumber;
                 this.mState = TelephonyManager.EXTRA_STATE_OFFHOOK;
                 return;
             }
@@ -709,7 +710,7 @@ public class ListenerService extends NotificationListenerService
         private final String TAG;
         
         private NotificationReceiver() {
-            this.TAG = NotificationReceiver.class.getSimpleName();
+            this.TAG =  "Karl";
         }
         
         private void onReceiveCustom(final Bundle bundle) {
@@ -842,23 +843,23 @@ public class ListenerService extends NotificationListenerService
                 Log.w(this.TAG, "Broadcast is missing extras");
                 return;
             }
-            final int int1 = bundle.getInt("net.medcorp.library.android.notificationserver.listener.EXTRA_NOTIFICATION_ID");
+            final int notificationId = bundle.getInt("net.medcorp.library.android.notificationserver.listener.EXTRA_NOTIFICATION_ID");
             final BluetoothDevice bluetoothDevice = (BluetoothDevice)bundle.getParcelable("net.medcorp.library.android.notificationserver.listener.EXTRA_BLUETOOTH_DEVICE");
-            final int int2 = bundle.getInt("net.medcorp.library.android.notificationserver.listener.EXTRA_REQUEST_ID");
-            final int[] intArray = bundle.getIntArray("net.medcorp.library.android.notificationserver.listener.EXTRA_ATTRIBUTES");
-            String access$1100 = null;
+            final int requestId = bundle.getInt("net.medcorp.library.android.notificationserver.listener.EXTRA_REQUEST_ID");
+            final int[] attributesArray = bundle.getIntArray("net.medcorp.library.android.notificationserver.listener.EXTRA_ATTRIBUTES");
+            String storedKey = null;
             NotificationAdapter adapter = null;
-            if (ListenerService.this.isKeyStored(int1)) {
-                access$1100 = ListenerService.this.getStoredKey(int1);
-                adapter = ListenerService.this.getAdapter(access$1100);
+            if (ListenerService.this.isKeyStored(notificationId)) {
+                storedKey = ListenerService.this.getStoredKey(notificationId);
+                adapter = new TestNotificationAdapter();
             }
-            if (access$1100 != null && adapter != null) {
+            if (storedKey != null && adapter != null) {
                 Log.d(this.TAG, "Attributes were read");
-                LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_ATTRIBUTES_READ").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_BLUETOOTH_DEVICE", (Parcelable)bluetoothDevice).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_REQUEST_ID", int2).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_ATTRIBUTES", (Parcelable)ListenerService.this.getNotificationAttributeList(adapter, intArray)));
+                LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_ATTRIBUTES_READ").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_BLUETOOTH_DEVICE", (Parcelable)bluetoothDevice).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_REQUEST_ID", requestId).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_ATTRIBUTES", (Parcelable)ListenerService.this.getNotificationAttributeList(adapter, attributesArray)));
                 return;
             }
             Log.w(this.TAG, "Not an active notification");
-            LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_INVALID_NOTIFICATION_ID").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_BLUETOOTH_DEVICE", (Parcelable)bluetoothDevice).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_REQUEST_ID", int2));
+            LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_INVALID_NOTIFICATION_ID").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_BLUETOOTH_DEVICE", (Parcelable)bluetoothDevice).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_REQUEST_ID", requestId));
         }
         
         private void onReceiveUnknown() {
@@ -875,26 +876,116 @@ public class ListenerService extends NotificationListenerService
             switch (action) {
                 default: {
                     this.onReceiveUnknown();
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.listener.ACTION_LIST": {
                     this.onReceiveList(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.listener.ACTION_READ_ATTRIBUTES": {
                     this.onReceiveReadAttributes(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.listener.ACTION_READ_ACTIONS": {
                     this.onReceiveReadActions(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.listener.ACTION_TRIGGER_DISMISS": {
                     this.onReceiveDismiss(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.listener.ACTION_TRIGGER_OPEN": {
                     this.onReceiveOpen(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.listener.ACTION_TRIGGER_CUSTOM": {
                     this.onReceiveCustom(extras);
+                    break;
                 }
             }
+        }
+    }
+
+    private class TestNotificationAdapter implements NotificationAdapter{
+
+        @Override
+        public String getActionTitle(Notification.Action p0) {
+            return null;
+        }
+
+        @Override
+        public Notification.Action[] getActions() {
+            return new Notification.Action[0];
+        }
+
+        @Override
+        public int getCategory() {
+            return 0xF0;
+        }
+
+        @Override
+        public String getKey() {
+            return "Key";
+        }
+
+        @Override
+        public int getNumber() {
+            return 9;
+        }
+
+        @Override
+        public String getPackageName() {
+            return "com.test.phone";
+        }
+
+        @Override
+        public String[] getPeople() {
+            return new String[]{"Karl"};
+        }
+
+        @Override
+        public int getPriority() {
+            return 5;
+        }
+
+        @Override
+        public String getSubtext() {
+            return "Subtext";
+        }
+
+        @Override
+        public String getText() {
+            return "Text";
+        }
+
+        @Override
+        public String getTitle() {
+            return "Title";
+        }
+
+        @Override
+        public int getVisibility() {
+            return 1;
+        }
+
+        @Override
+        public long getWhen() {
+            return new Date().getTime();
+        }
+
+        @Override
+        public boolean isArtificial() {
+            return false;
+        }
+
+        @Override
+        public boolean triggerAction(int p0) {
+            return false;
+        }
+
+        @Override
+        public boolean triggerNotification() {
+            return false;
         }
     }
 }

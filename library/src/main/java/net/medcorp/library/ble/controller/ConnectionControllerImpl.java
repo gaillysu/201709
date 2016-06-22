@@ -217,7 +217,7 @@ import java.util.TimerTask;
         context.getSharedPreferences(Constants.PREF_NAME, 0).edit().putString(Constants.SAVE_MAC_ADDRESS, address).commit();
     }
 
-    private String getSaveAddress()
+    public String getSaveAddress()
     {
         return context.getSharedPreferences(Constants.PREF_NAME, 0).getString(Constants.SAVE_MAC_ADDRESS, "");
     }

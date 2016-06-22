@@ -45,7 +45,7 @@ public class GattServer
     }
     
     public static boolean connect(final BluetoothDevice bluetoothDevice) {
-        Log.w(TAG,"Gatt connect");
+        Log.w(TAG,"Gatt connect, is it started?" + isStarted());
         return GattServer.mGattServer != null && GattServer.mGattServer.connect(bluetoothDevice, true);
     }
     
@@ -213,12 +213,8 @@ public class GattServer
     
     private static class GattReceiver extends BroadcastReceiver
     {
-        private static final String TAG;
+        static final String TAG = "Karl";
 
-
-        static {
-            TAG = "Karl";
-        }
         
         private static byte[] getActionsPacket(final NotificationActionList list) {
 
@@ -250,7 +246,7 @@ public class GattServer
         }
         
         private static byte[] getAlertPacket(final int n, final NotificationSummary notificationSummary) {
-            return ByteBuffer.allocate(12).order(ByteOrder.LITTLE_ENDIAN).put(GattUtils.getByte(n)).putInt(notificationSummary.getId()).put(GattUtils.getByte(notificationSummary.getCategory())).putInt(notificationSummary.getNumber()).put(GattUtils.getByte(notificationSummary.getPriority())).put(GattUtils.getByte(notificationSummary.getVisibility())).array();
+            return ByteBuffer.allocate(13).order(ByteOrder.LITTLE_ENDIAN).put(GattUtils.getByte(n)).putInt(notificationSummary.getId()).put(GattUtils.getByte(notificationSummary.getCategory())).putInt(notificationSummary.getNumber()).put(GattUtils.getByte(notificationSummary.getPriority())).put(GattUtils.getByte(notificationSummary.getVisibility())).put((byte) 1).array();
         }
         
         private static byte[] getAttributesPacket(final NotificationAttributeList list) {
@@ -326,6 +322,7 @@ public class GattServer
         }
         
         private static void onReceiveAlert(final Bundle bundle, final int n) {
+            Log.w("Karl","Test on receive alert");
             if (bundle == null || bundle.get("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY") == null) {
                 Log.w(GattReceiver.TAG, "Broadcast is missing extras");
                 return;
@@ -410,27 +407,35 @@ public class GattServer
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_POSTED": {
                     onReceivePosted(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_UPDATED": {
                     onReceiveUpdated(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_REMOVED": {
                     onReceiveRemoved(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_ATTRIBUTES_READ": {
                     onReceiveAttributesRead(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_ACTIONS_READ": {
                     onReceiveActionsRead(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_ACTION_TRIGGERED": {
                     onReceiveActionTriggered(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_INVALID_NOTIFICATION_ID": {
                     onReceiveInvalidNotificationID(extras);
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_INVALID_ACTION": {
                     onReceiveInvalidAction(extras);
+                    break;
                 }
             }
         }
@@ -518,14 +523,17 @@ public class GattServer
                     default: {
                         Log.w(GattServerCallback.TAG, bluetoothDevice.getAddress() + ":" + n + " - Unsupported action");
                         GattServer.mGattServer.sendResponse(bluetoothDevice, n, 131, 0, (byte[])null);
+                        break;
                     }
                     case 2: {
                         Log.d(GattServerCallback.TAG, bluetoothDevice.getAddress() + ":" + n + " - Action is open");
                         LocalBroadcastManager.getInstance(GattServer.mContext).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.listener.ACTION_TRIGGER_OPEN").putExtra("net.medcorp.library.android.notificationserver.listener.EXTRA_NOTIFICATION_ID", int1).putExtra("net.medcorp.library.android.notificationserver.listener.EXTRA_BLUETOOTH_DEVICE", (Parcelable)bluetoothDevice).putExtra("net.medcorp.library.android.notificationserver.listener.EXTRA_REQUEST_ID", n));
+                        break;
                     }
                     case 1: {
                         Log.d(GattServerCallback.TAG, bluetoothDevice.getAddress() + ":" + n + " - Action is dismiss");
                         LocalBroadcastManager.getInstance(GattServer.mContext).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.listener.ACTION_TRIGGER_DISMISS").putExtra("net.medcorp.library.android.notificationserver.listener.EXTRA_NOTIFICATION_ID", int1).putExtra("net.medcorp.library.android.notificationserver.listener.EXTRA_BLUETOOTH_DEVICE", (Parcelable)bluetoothDevice).putExtra("net.medcorp.library.android.notificationserver.listener.EXTRA_REQUEST_ID", n));
+                        break;
                     }
                 }
             }
@@ -580,6 +588,7 @@ public class GattServer
                     GattServer.mSubscribedData.put(bluetoothDevice, false);
                     GattServer.mDeviceMtus.put(bluetoothDevice, 20);
                     GattServer.mNotificationHandler.put(bluetoothDevice);
+                    break;
                 }
                 case 0: {
                     Log.w("Karl","Removed from data & alert for device: "  + bluetoothDevice.getAddress());
@@ -587,6 +596,7 @@ public class GattServer
                     GattServer.mSubscribedData.remove(bluetoothDevice);
                     GattServer.mDeviceMtus.remove(bluetoothDevice);
                     GattServer.mNotificationHandler.remove(bluetoothDevice);
+                    break;
                 }
             }
         }
@@ -600,15 +610,19 @@ public class GattServer
             switch (array[0]) {
                 default: {
                     this.onUnknownCommand(bluetoothDevice, n);
+                    break;
                 }
                 case 1: {
                     this.onReadAttributesCommand(bluetoothDevice, n, array);
+                    break;
                 }
                 case 2: {
                     this.onReadCustomActionsCommand(bluetoothDevice, n, array);
+                    break;
                 }
                 case 3: {
                     this.onTriggerCustomActionCommand(bluetoothDevice, n, array);
+                    break;
                 }
             }
         }
@@ -794,9 +808,11 @@ public class GattServer
                 default: {}
                 case 1: {
                     this.sendNotification(byteBuffer, bluetoothDevice, GattServer.mAlertCharacteristic);
+                    break;
                 }
                 case 2: {
                     this.sendNotification(byteBuffer, bluetoothDevice, GattServer.mDataCharacteristic);
+                    break;
                 }
             }
         }
@@ -826,12 +842,15 @@ public class GattServer
             switch (message.what) {
                 default: {
                     this.onHandleUnknown();
+                    break;
                 }
                 case 1: {
                     this.onHandleNotificationRequested(message.getData());
+                    break;
                 }
                 case 2: {
                     this.onHandleNotificationSent(message.getData());
+                    break;
                 }
             }
         }

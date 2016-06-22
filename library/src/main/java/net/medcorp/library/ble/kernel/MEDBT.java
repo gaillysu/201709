@@ -51,8 +51,7 @@ public interface MEDBT {
 	/**
 	 * THe logcat tag used by the SDK
 	 */
-	public static String TAG = "MED BT SDK";
-
+    String TAG = "MED BT SDK";
 
 	/**
      * Start scanning for nearby devices supporting the given services, it should connect automatically to the first device encountered.

@@ -74,5 +74,7 @@ public interface ConnectionController {
     public void pairDevice();
     public void unPairDevice();
 
+    public String getSaveAddress();
+
     public Set<BluetoothDevice> getDevice();
 }
