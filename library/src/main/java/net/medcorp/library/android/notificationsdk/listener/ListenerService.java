@@ -455,13 +455,15 @@ public class ListenerService extends NotificationListenerService
     }
     
     public NotificationAdapter getAdapter(final String s) {
+        //we save the NotificationAdapter to cache, so don't get it from system statusbar.
+        /**
         final StatusBarNotification[] activeNotifications = this.getActiveNotifications();
         for (int length = activeNotifications.length, i = 0; i < length; ++i) {
             final NotificationAdapter adapter = this.getAdapter(activeNotifications[i]);
             if (adapter.getKey().equals(s)) {
                 return adapter;
             }
-        }
+        }*/
         for (final NotificationAdapter notificationAdapter : this.getStoredArtificialNotifications().values()) {
             if (notificationAdapter.getKey().equals(s)) {
                 return notificationAdapter;
@@ -516,7 +518,8 @@ public class ListenerService extends NotificationListenerService
     
     public void onNotificationPosted(final StatusBarNotification statusBarNotification) {
         if (this.matchesServiceFilter(statusBarNotification) && this.matchesSummaryFilter(statusBarNotification)) {
-            this.onNotificationPosted(this.getAdapter(statusBarNotification));
+            //TODO for debug, I omit this notification catched by NotificationListenerService, but must open it for other app, such as :whatsapp,facebook,wechat...
+            //this.onNotificationPosted(this.getAdapter(statusBarNotification));
         }
     }
     
@@ -642,7 +645,8 @@ public class ListenerService extends NotificationListenerService
             }
             if (TelephonyManager.EXTRA_STATE_IDLE.equals(status)) {
                 if (TelephonyManager.EXTRA_STATE_RINGING.equals(this.mState)) {
-                    this.onReceiveMissedCall(context, this.mNumber);
+                    //TODO for debug, I remove it, must open it for getting missed call
+                    //this.onReceiveMissedCall(context, this.mNumber);
                 }
                 this.mNumber = phoneNumber;
                 this.mState = TelephonyManager.EXTRA_STATE_IDLE;
@@ -650,6 +654,7 @@ public class ListenerService extends NotificationListenerService
             }
             if (TelephonyManager.EXTRA_STATE_RINGING.equals(status)) {
                 this.mNumber = phoneNumber;
+                //two cases, 1: only one call is coming, 2:the second call is coming, the first call is idle or active
                 if (TelephonyManager.EXTRA_STATE_IDLE.equals(this.mState) || TelephonyManager.EXTRA_STATE_OFFHOOK.equals(this.mState)) {
                     this.onReceiveIncomingCall(context, this.mNumber);
                 }
@@ -847,11 +852,12 @@ public class ListenerService extends NotificationListenerService
             final BluetoothDevice bluetoothDevice = (BluetoothDevice)bundle.getParcelable("net.medcorp.library.android.notificationserver.listener.EXTRA_BLUETOOTH_DEVICE");
             final int requestId = bundle.getInt("net.medcorp.library.android.notificationserver.listener.EXTRA_REQUEST_ID");
             final int[] attributesArray = bundle.getIntArray("net.medcorp.library.android.notificationserver.listener.EXTRA_ATTRIBUTES");
+            Log.d(this.TAG, "Received a request (read attributes): " + "notificationId: " + notificationId + ",requestId" + requestId + ",attributesArray: " + attributesArray.toString());
             String storedKey = null;
             NotificationAdapter adapter = null;
             if (ListenerService.this.isKeyStored(notificationId)) {
                 storedKey = ListenerService.this.getStoredKey(notificationId);
-                adapter = new TestNotificationAdapter();
+                adapter = ListenerService.this.getAdapter(storedKey);
             }
             if (storedKey != null && adapter != null) {
                 Log.d(this.TAG, "Attributes were read");
@@ -903,89 +909,6 @@ public class ListenerService extends NotificationListenerService
                     break;
                 }
             }
-        }
-    }
-
-    private class TestNotificationAdapter implements NotificationAdapter{
-
-        @Override
-        public String getActionTitle(Notification.Action p0) {
-            return null;
-        }
-
-        @Override
-        public Notification.Action[] getActions() {
-            return new Notification.Action[0];
-        }
-
-        @Override
-        public int getCategory() {
-            return 0xF0;
-        }
-
-        @Override
-        public String getKey() {
-            return "Key";
-        }
-
-        @Override
-        public int getNumber() {
-            return 9;
-        }
-
-        @Override
-        public String getPackageName() {
-            return "com.test.phone";
-        }
-
-        @Override
-        public String[] getPeople() {
-            return new String[]{"Karl"};
-        }
-
-        @Override
-        public int getPriority() {
-            return 5;
-        }
-
-        @Override
-        public String getSubtext() {
-            return "Subtext";
-        }
-
-        @Override
-        public String getText() {
-            return "Text";
-        }
-
-        @Override
-        public String getTitle() {
-            return "Title";
-        }
-
-        @Override
-        public int getVisibility() {
-            return 1;
-        }
-
-        @Override
-        public long getWhen() {
-            return new Date().getTime();
-        }
-
-        @Override
-        public boolean isArtificial() {
-            return false;
-        }
-
-        @Override
-        public boolean triggerAction(int p0) {
-            return false;
-        }
-
-        @Override
-        public boolean triggerNotification() {
-            return false;
         }
     }
 }

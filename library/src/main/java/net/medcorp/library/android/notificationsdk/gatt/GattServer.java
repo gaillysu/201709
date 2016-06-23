@@ -7,9 +7,13 @@ import android.support.v4.content.*;
 import android.content.*;
 import java.nio.*;
 import net.medcorp.library.android.notificationsdk.listener.parcelable.*;
+import net.medcorp.library.ble.util.HexUtils;
+
 import android.util.*;
 import java.util.*;
 import android.os.*;
+
+import org.apache.commons.codec.binary.Hex;
 
 public class GattServer
 {
@@ -346,8 +350,10 @@ public class GattServer
             final int int1 = bundle.getInt("net.medcorp.library.android.notificationserver.gatt.EXTRA_REQUEST_ID");
             final NotificationAttributeList list = (NotificationAttributeList)bundle.getParcelable("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_ATTRIBUTES");
             GattServer.mGattServer.sendResponse(bluetoothDevice, int1, 0, 0, (byte[])null);
+            byte[] payloadAttributes = getAttributesPacket(list);
             Log.d(GattReceiver.TAG, bluetoothDevice.getAddress() + ":" + int1 + " - Success");
-            notifyDataPacket(getAttributesPacket(list), bluetoothDevice);
+            Log.d(GattReceiver.TAG, "onReceiveAttributesRead, send data: " + new String(Hex.encodeHexString(payloadAttributes)));
+            notifyDataPacket(payloadAttributes, bluetoothDevice);
         }
         
         private static void onReceiveInvalidAction(final Bundle bundle) {
@@ -404,6 +410,7 @@ public class GattServer
             switch (action) {
                 default: {
                     onReceiveUnknown();
+                    break;
                 }
                 case "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_POSTED": {
                     onReceivePosted(extras);
@@ -564,6 +571,7 @@ public class GattServer
         public void onCharacteristicWriteRequest(final BluetoothDevice bluetoothDevice, final int n, final BluetoothGattCharacteristic bluetoothGattCharacteristic, final boolean b, final boolean b2, final int n2, final byte[] array) {
             super.onCharacteristicWriteRequest(bluetoothDevice, n, bluetoothGattCharacteristic, b, b2, n2, array);
             Log.d(GattServerCallback.TAG, bluetoothDevice.getAddress() + ":" + n + " - Characteristic write request");
+            Log.d(GattServerCallback.TAG,"<<<<<<<<< onCharacteristicWriteRequest, data:"+new String(Hex.encodeHex(array)) + ",bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
             if (bluetoothDevice.getBondState() != 12) {
                 Log.w(GattServerCallback.TAG, bluetoothDevice.getAddress() + ":" + n + " - Not bonded");
                 GattServer.mGattServer.sendResponse(bluetoothDevice, n, 5, 0, (byte[])null);
@@ -607,6 +615,7 @@ public class GattServer
                 GattServer.mGattServer.sendResponse(bluetoothDevice, n, 129, 0, (byte[])null);
                 return;
             }
+            Log.d(GattServerCallback.TAG,"onDataCharacteristicWriteRequest, data: " + new String(Hex.encodeHex(array)) + ",request ID: " + n + ",notification ID: " + HexUtils.bytesToInt(new byte[]{array[1],array[2],array[3],array[4]}));
             switch (array[0]) {
                 default: {
                     this.onUnknownCommand(bluetoothDevice, n);
@@ -796,6 +805,7 @@ public class GattServer
         private void sendNotification(final ByteBuffer byteBuffer, final BluetoothDevice bluetoothDevice, final BluetoothGattCharacteristic bluetoothGattCharacteristic) {
             final byte[] value = new byte[Math.min(GattServer.mDeviceMtus.get(bluetoothDevice), byteBuffer.remaining())];
             byteBuffer.get(value);
+            Log.d(NotificationHandler.TAG,">>>>>>sendNotification,data: " + new String(Hex.encodeHex(value)) + ",bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
             bluetoothGattCharacteristic.setValue(value);
             GattServer.mGattServer.notifyCharacteristicChanged(bluetoothDevice, bluetoothGattCharacteristic, false);
             if (Build.VERSION.SDK_INT < 21) {
