@@ -91,13 +91,13 @@ public final class ConfigHelper
     
     public static String getPackageLabel(final Context context, final String s) {
         if ("ans_incoming_call".equals(s)) {
-            return context.getString(R.string.incoming_call);
+            return "incoming call";//context.getString(R.string.incoming_call);
         }
         if ("ans_missed_call".equals(s)) {
-            return context.getString(R.string.missed_call);
+            return "missed call";//context.getString(R.string.missed_call);
         }
         if ("ans_sms".equals(s)) {
-            return context.getString(R.string.unread_sms);
+            return "unread sms";//context.getString(R.string.unread_sms);
         }
         try {
             return context.getPackageManager().getApplicationLabel(context.getPackageManager().getApplicationInfo(s, 0)).toString();

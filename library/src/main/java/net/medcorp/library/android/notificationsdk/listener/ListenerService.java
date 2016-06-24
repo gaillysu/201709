@@ -11,6 +11,10 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.os.Parcelable;
 import android.provider.ContactsContract;
 import android.service.notification.NotificationListenerService;
@@ -37,9 +41,11 @@ import net.medcorp.library.android.notificationsdk.listener.parcelable.Notificat
 import net.medcorp.library.android.notificationsdk.listener.parcelable.NotificationAttributeList;
 import net.medcorp.library.android.notificationsdk.listener.parcelable.NotificationSummary;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,7 +65,6 @@ public class ListenerService extends NotificationListenerService
     private SparseArray<String> mKeyMap;
     private NotificationReceiver mNotificationReceiver;
     private Map<String, NotificationSummary> mSummaryMap;
-
     
     public ListenerService() {
         Log.w(TAG,"Listener service!!?");
@@ -135,7 +140,7 @@ public class ListenerService extends NotificationListenerService
     
     private NotificationAdapter[] getAllNotifications() {
         final ArrayList<NotificationAdapter> list = new ArrayList<NotificationAdapter>();
-        final StatusBarNotification[] activeNotifications = this.getActiveNotifications();
+        final StatusBarNotification[] activeNotifications = ListenerService.this.getActiveNotifications();
         for (int length = activeNotifications.length, i = 0; i < length; ++i) {
             final StatusBarNotification statusBarNotification = activeNotifications[i];
             final NotificationAdapter adapter = this.getAdapter(statusBarNotification);
@@ -388,7 +393,7 @@ public class ListenerService extends NotificationListenerService
         int i = 0;
         if (Build.VERSION.SDK_INT >= 21) {
             if ((statusBarNotification.getNotification().flags & 0x200) > 0) {
-                final StatusBarNotification[] activeNotifications = this.getActiveNotifications();
+                final StatusBarNotification[] activeNotifications = ListenerService.this.getActiveNotifications();
                 for (int length = activeNotifications.length, j = 0; j < length; ++j) {
                     final StatusBarNotification statusBarNotification2 = activeNotifications[j];
                     if (this.isNotificationStored(this.getAdapter(statusBarNotification2)) && !this.getAdapter(statusBarNotification2).getKey().equals(this.getAdapter(statusBarNotification).getKey()) && statusBarNotification2.getGroupKey().equals(statusBarNotification.getGroupKey()) && (statusBarNotification2.getNotification().flags & 0x200) == 0x0) {
@@ -397,7 +402,7 @@ public class ListenerService extends NotificationListenerService
                 }
             }
             else {
-                for (StatusBarNotification[] activeNotifications2 = this.getActiveNotifications(); i < activeNotifications2.length; ++i) {
+                for (StatusBarNotification[] activeNotifications2 = ListenerService.this.getActiveNotifications(); i < activeNotifications2.length; ++i) {
                     final StatusBarNotification statusBarNotification3 = activeNotifications2[i];
                     if (this.isNotificationStored(this.getAdapter(statusBarNotification3)) && !this.getAdapter(statusBarNotification3).getKey().equals(this.getAdapter(statusBarNotification).getKey()) && statusBarNotification3.getGroupKey().equals(statusBarNotification.getGroupKey()) && (statusBarNotification3.getNotification().flags & 0x200) > 0) {
                         this.onNotificationRemoved(statusBarNotification3);
@@ -453,17 +458,8 @@ public class ListenerService extends NotificationListenerService
         }
         return new OverrideAdapter(jellyBeanAdapter, this.mConfigMonitor);
     }
-    
+
     public NotificationAdapter getAdapter(final String s) {
-        //we save the NotificationAdapter to cache, so don't get it from system statusbar.
-        /**
-        final StatusBarNotification[] activeNotifications = this.getActiveNotifications();
-        for (int length = activeNotifications.length, i = 0; i < length; ++i) {
-            final NotificationAdapter adapter = this.getAdapter(activeNotifications[i]);
-            if (adapter.getKey().equals(s)) {
-                return adapter;
-            }
-        }*/
         for (final NotificationAdapter notificationAdapter : this.getStoredArtificialNotifications().values()) {
             if (notificationAdapter.getKey().equals(s)) {
                 return notificationAdapter;
@@ -510,7 +506,7 @@ public class ListenerService extends NotificationListenerService
     
     public void onListenerConnected() {
         Log.d(TAG, "Listener connected");
-        final StatusBarNotification[] activeNotifications = this.getActiveNotifications();
+        final StatusBarNotification[] activeNotifications = ListenerService.this.getActiveNotifications();
         for (int length = activeNotifications.length, i = 0; i < length; ++i) {
             this.onNotificationPosted(activeNotifications[i]);
         }
@@ -518,8 +514,7 @@ public class ListenerService extends NotificationListenerService
     
     public void onNotificationPosted(final StatusBarNotification statusBarNotification) {
         if (this.matchesServiceFilter(statusBarNotification) && this.matchesSummaryFilter(statusBarNotification)) {
-            //TODO for debug, I omit this notification catched by NotificationListenerService, but must open it for other app, such as :whatsapp,facebook,wechat...
-            //this.onNotificationPosted(this.getAdapter(statusBarNotification));
+            this.onNotificationPosted(this.getAdapter(statusBarNotification));
         }
     }
     
@@ -645,8 +640,7 @@ public class ListenerService extends NotificationListenerService
             }
             if (TelephonyManager.EXTRA_STATE_IDLE.equals(status)) {
                 if (TelephonyManager.EXTRA_STATE_RINGING.equals(this.mState)) {
-                    //TODO for debug, I remove it, must open it for getting missed call
-                    //this.onReceiveMissedCall(context, this.mNumber);
+                    this.onReceiveMissedCall(context, this.mNumber);
                 }
                 this.mNumber = phoneNumber;
                 this.mState = TelephonyManager.EXTRA_STATE_IDLE;
@@ -852,7 +846,7 @@ public class ListenerService extends NotificationListenerService
             final BluetoothDevice bluetoothDevice = (BluetoothDevice)bundle.getParcelable("net.medcorp.library.android.notificationserver.listener.EXTRA_BLUETOOTH_DEVICE");
             final int requestId = bundle.getInt("net.medcorp.library.android.notificationserver.listener.EXTRA_REQUEST_ID");
             final int[] attributesArray = bundle.getIntArray("net.medcorp.library.android.notificationserver.listener.EXTRA_ATTRIBUTES");
-            Log.d(this.TAG, "Received a request (read attributes): " + "notificationId: " + notificationId + ",requestId" + requestId + ",attributesArray: " + attributesArray.toString());
+            Log.d(this.TAG, "Received a request (read attributes): " + "notificationId: " + notificationId + ",requestId: " + requestId + ",attributesArray: " + Arrays.toString(attributesArray));
             String storedKey = null;
             NotificationAdapter adapter = null;
             if (ListenerService.this.isKeyStored(notificationId)) {
@@ -911,4 +905,5 @@ public class ListenerService extends NotificationListenerService
             }
         }
     }
+
 }

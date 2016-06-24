@@ -38,7 +38,7 @@ public class LollipopAdapter extends KitKatAdapter
                     return 5;
                 }
                 case "msg": {
-                    return 6;
+                    return 242;//6
                 }
                 case "progress": {
                     return 7;

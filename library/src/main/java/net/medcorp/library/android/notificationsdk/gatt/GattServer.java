@@ -352,7 +352,7 @@ public class GattServer
             GattServer.mGattServer.sendResponse(bluetoothDevice, int1, 0, 0, (byte[])null);
             byte[] payloadAttributes = getAttributesPacket(list);
             Log.d(GattReceiver.TAG, bluetoothDevice.getAddress() + ":" + int1 + " - Success");
-            Log.d(GattReceiver.TAG, "onReceiveAttributesRead, send data: " + new String(Hex.encodeHexString(payloadAttributes)));
+            Log.d(GattReceiver.TAG, "onReceiveAttributesRead, send data: " + new String(Hex.encodeHex(payloadAttributes)));
             notifyDataPacket(payloadAttributes, bluetoothDevice);
         }
         
@@ -665,10 +665,6 @@ public class GattServer
         public void onNotificationSent(final BluetoothDevice bluetoothDevice, final int n) {
             super.onNotificationSent(bluetoothDevice, n);
             Log.d(GattServerCallback.TAG, bluetoothDevice.getAddress() + " - Notification sent with status " + n);
-            if (n == 0) {
-                GattServer.mNotificationHandler.sendSentMessage(bluetoothDevice);
-                return;
-            }
             GattServer.mNotificationHandler.sendSentMessage(bluetoothDevice);
         }
     }
@@ -735,7 +731,7 @@ public class GattServer
             if (bundle == null || bundle.getByteArray("payload") == null || bundle.getParcelable("device") == null) {
                 Log.w(NotificationHandler.TAG, "Message is missing extras");
             } else {
-                final ByteBuffer wrap = ByteBuffer.wrap(bundle.getByteArray("payload"));
+                final ByteBuffer wrap = ByteBuffer.wrap(bundle.getByteArray("payload")).order(ByteOrder.LITTLE_ENDIAN);
                 final BluetoothDevice bluetoothDevice = (BluetoothDevice)bundle.getParcelable("device");
                 final Integer value = bundle.getInt("type");
                 if (!this.isConnected(bluetoothDevice)) {
@@ -808,9 +804,8 @@ public class GattServer
             Log.d(NotificationHandler.TAG,">>>>>>sendNotification,data: " + new String(Hex.encodeHex(value)) + ",bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
             bluetoothGattCharacteristic.setValue(value);
             GattServer.mGattServer.notifyCharacteristicChanged(bluetoothDevice, bluetoothGattCharacteristic, false);
-            if (Build.VERSION.SDK_INT < 21) {
-                this.sendSentMessage(bluetoothDevice);
-            }
+            //here directly invoke this function, for some reason, this function should be invoked in GattServerCallback.onNotificationSent(), but my xiaomi phone can't execute this callback function
+            this.sendSentMessage(bluetoothDevice);
         }
         
         private void sendNotification(final ByteBuffer byteBuffer, final BluetoothDevice bluetoothDevice, final Integer n) {
