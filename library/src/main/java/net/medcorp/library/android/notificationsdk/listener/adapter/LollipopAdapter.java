@@ -13,7 +13,8 @@ public class LollipopAdapter extends KitKatAdapter
     @Override
     public int getCategory() {
         int n = 1;
-        if (this.mSbn.getNotification().category == null) {
+        if (this.mSbn.getNotification().category == null)
+        {
             n = 255;
         }
         else {
@@ -66,6 +67,34 @@ public class LollipopAdapter extends KitKatAdapter
                 }
             }
         }
+        //TODO here make a patch that on xiaomi phone, the mSbn.getNotification().category is null, we continue it with package name
+        //we should list all the possible packages of more apps,pls refer to ConfigConstants.java
+        if(mSbn.getPackageName().equals("com.google.android.talk")
+                || mSbn.getPackageName().equals("com.android.mms")
+                || mSbn.getPackageName().equals("com.google.android.apps.messaging")
+                || mSbn.getPackageName().equals("com.sonyericsson.conversations")
+                || mSbn.getPackageName().equals("com.htc.sense.mms")
+                || mSbn.getPackageName().equals("com.google.android.talk")
+                )
+        {
+            return 242;
+        }
+        else if(mSbn.getPackageName().equals("com.android.email")
+                || mSbn.getPackageName().equals("com.google.android.email")
+                || mSbn.getPackageName().equals("com.google.android.gm")
+                || mSbn.getPackageName().equals("com.kingsoft.email")
+                || mSbn.getPackageName().equals("com.tencent.androidqqmail")
+                || mSbn.getPackageName().equals("com.outlook.Z7"))
+        {
+            return 3;
+        }
+        else if(mSbn.getPackageName().equals("com.facebook.katana")
+                ||mSbn.getPackageName().equals("com.tencent.mm")
+                ||mSbn.getPackageName().equals("com.whatsapp"))
+        {
+            return 11;
+        }
+
         return n;
     }
     
