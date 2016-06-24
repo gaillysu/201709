@@ -27,12 +27,15 @@ public class OverrideAdapter implements NotificationAdapter
     
     @Override
     public int getCategory() {
+        /**
         try {
             return Integer.valueOf(this.mConfigMonitor.getOverride(OverrideType.CATEGORY, this.mNotificationAdapter.getPackageName(), String.valueOf(this.mNotificationAdapter.getCategory()), String.valueOf(255)));
         }
         catch (NumberFormatException ex) {
             return this.mNotificationAdapter.getCategory();
         }
+         */
+        return this.mNotificationAdapter.getCategory();
     }
     
     @Override

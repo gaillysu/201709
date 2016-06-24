@@ -799,9 +799,10 @@ public class GattServer
         }
         
         private void sendNotification(final ByteBuffer byteBuffer, final BluetoothDevice bluetoothDevice, final BluetoothGattCharacteristic bluetoothGattCharacteristic) {
+            //TODO: sms length got limited by MTU?(20 bytes), how to send full sms title > 20 bytes
             final byte[] value = new byte[Math.min(GattServer.mDeviceMtus.get(bluetoothDevice), byteBuffer.remaining())];
             byteBuffer.get(value);
-            Log.d(NotificationHandler.TAG,">>>>>>sendNotification,data: " + new String(Hex.encodeHex(value)) + ",bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
+            Log.d(NotificationHandler.TAG,">>>>>>sendNotification,data: " + new String(Hex.encodeHex(value)) + ",notification ID: "+ HexUtils.bytesToInt(new byte[]{value[1],value[2],value[3],value[4]}) + " ,bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
             bluetoothGattCharacteristic.setValue(value);
             GattServer.mGattServer.notifyCharacteristicChanged(bluetoothDevice, bluetoothGattCharacteristic, false);
             //here directly invoke this function, for some reason, this function should be invoked in GattServerCallback.onNotificationSent(), but my xiaomi phone can't execute this callback function
