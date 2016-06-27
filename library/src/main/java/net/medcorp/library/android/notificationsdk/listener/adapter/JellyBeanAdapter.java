@@ -161,7 +161,7 @@ public class JellyBeanAdapter implements NotificationAdapter
     
     @Override
     public boolean isArtificial() {
-        return false;
+        return true;
     }
     
     @TargetApi(18)

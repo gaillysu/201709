@@ -41,6 +41,8 @@ import net.medcorp.library.android.notificationsdk.listener.parcelable.Notificat
 import net.medcorp.library.android.notificationsdk.listener.parcelable.NotificationAttributeList;
 import net.medcorp.library.android.notificationsdk.listener.parcelable.NotificationSummary;
 
+import org.json.JSONArray;
+
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -519,8 +521,8 @@ public class ListenerService extends NotificationListenerService
     }
     
     public void onNotificationPosted(final NotificationAdapter notificationAdapter) {
-        Log.d(TAG, "New event (notification posted)");
-        if (this.matchesFilter(notificationAdapter)) {
+        Log.w(TAG, "<<<<<<<<<<<<New event (notification posted)---" +"key: "+notificationAdapter.getKey()+ ",KeyHashCode: "+ notificationAdapter.getKey().hashCode()+",category: " + notificationAdapter.getCategory() + ",package: " + notificationAdapter.getPackageName() + ",title: " + notificationAdapter.getTitle() + ",text: " + notificationAdapter.getText() + ",subtext: " + notificationAdapter.getSubtext() + ",people: " + Arrays.toString(notificationAdapter.getPeople()));
+        if (this.matchesFilter(notificationAdapter) && notificationAdapter.getCategory() !=255) {
             String s;
             if (this.isNotificationStored(notificationAdapter)) {
                 s = "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_UPDATED";
@@ -532,7 +534,7 @@ public class ListenerService extends NotificationListenerService
             LocalBroadcastManager.getInstance((Context)this).sendBroadcast(new Intent(s).putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)this.getNotificationSummary(notificationAdapter)));
             return;
         }
-        Log.d(TAG, "Event has been ignored (filtered)");
+        Log.w(TAG, "Event has been ignored (filtered)");
     }
     
     public void onNotificationRemoved(final StatusBarNotification statusBarNotification) {

@@ -7,7 +7,6 @@ import android.support.v4.content.*;
 import android.content.*;
 import java.nio.*;
 import net.medcorp.library.android.notificationsdk.listener.parcelable.*;
-import net.medcorp.library.ble.util.HexUtils;
 
 import android.util.*;
 import java.util.*;
@@ -571,7 +570,8 @@ public class GattServer
         public void onCharacteristicWriteRequest(final BluetoothDevice bluetoothDevice, final int n, final BluetoothGattCharacteristic bluetoothGattCharacteristic, final boolean b, final boolean b2, final int n2, final byte[] array) {
             super.onCharacteristicWriteRequest(bluetoothDevice, n, bluetoothGattCharacteristic, b, b2, n2, array);
             Log.d(GattServerCallback.TAG, bluetoothDevice.getAddress() + ":" + n + " - Characteristic write request");
-            Log.d(GattServerCallback.TAG,"<<<<<<<<< onCharacteristicWriteRequest, data:"+new String(Hex.encodeHex(array)) + ",bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
+            final ByteBuffer order = ByteBuffer.wrap(array).order(ByteOrder.LITTLE_ENDIAN);
+            Log.d(GattServerCallback.TAG,"<<<<<<<<< onCharacteristicWriteRequest, data:"+new String(Hex.encodeHex(array)) + ",notification ID: "+ order.getInt(1)+ ",request ID: "+ n + ",bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
             if (bluetoothDevice.getBondState() != 12) {
                 Log.w(GattServerCallback.TAG, bluetoothDevice.getAddress() + ":" + n + " - Not bonded");
                 GattServer.mGattServer.sendResponse(bluetoothDevice, n, 5, 0, (byte[])null);
@@ -615,7 +615,6 @@ public class GattServer
                 GattServer.mGattServer.sendResponse(bluetoothDevice, n, 129, 0, (byte[])null);
                 return;
             }
-            Log.d(GattServerCallback.TAG,"onDataCharacteristicWriteRequest, data: " + new String(Hex.encodeHex(array)) + ",request ID: " + n + ",notification ID: " + HexUtils.bytesToInt(new byte[]{array[1],array[2],array[3],array[4]}));
             switch (array[0]) {
                 default: {
                     this.onUnknownCommand(bluetoothDevice, n);
@@ -799,10 +798,9 @@ public class GattServer
         }
         
         private void sendNotification(final ByteBuffer byteBuffer, final BluetoothDevice bluetoothDevice, final BluetoothGattCharacteristic bluetoothGattCharacteristic) {
-            //TODO: sms length got limited by MTU?(20 bytes), how to send full sms title > 20 bytes
             final byte[] value = new byte[Math.min(GattServer.mDeviceMtus.get(bluetoothDevice), byteBuffer.remaining())];
             byteBuffer.get(value);
-            Log.d(NotificationHandler.TAG,">>>>>>sendNotification,data: " + new String(Hex.encodeHex(value)) + ",notification ID: "+ HexUtils.bytesToInt(new byte[]{value[1],value[2],value[3],value[4]}) + " ,bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
+            Log.d(NotificationHandler.TAG,">>>>>>sendNotification,data: " + new String(Hex.encodeHex(value)) + ",notification ID: "+ byteBuffer.getInt(1) + " ,bluetoothGattCharacteristic: " + bluetoothGattCharacteristic.getUuid().toString() + ",bluetoothDevice: " + bluetoothDevice.getAddress());
             bluetoothGattCharacteristic.setValue(value);
             GattServer.mGattServer.notifyCharacteristicChanged(bluetoothDevice, bluetoothGattCharacteristic, false);
             //here directly invoke this function, for some reason, this function should be invoked in GattServerCallback.onNotificationSent(), but my xiaomi phone can't execute this callback function
