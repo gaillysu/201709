@@ -388,7 +388,8 @@ public class ListenerService extends NotificationListenerService
     }
     
     private boolean matchesServiceFilter(final StatusBarNotification statusBarNotification) {
-        return (statusBarNotification.getNotification().flags & 0x162) == 0x0;
+        //no found 0x162 define, here always return true
+        return true;//(statusBarNotification.getNotification().flags & 0x162) == 0x0;
     }
     
     private boolean matchesSummaryFilter(final StatusBarNotification statusBarNotification) {

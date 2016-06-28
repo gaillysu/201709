@@ -39,11 +39,8 @@ public class LollipopAdapter extends KitKatAdapter
                     return 5;
                 }
                 case "msg":
-                case "sms":
-                case "mms":
-                case "message":
                 {
-                    return 242;//6
+                    return 242;//6 is the official define(pls refer to Notification.java), here 242 is defined by MED, 0xF2, it means unread message.
                 }
                 case "progress": {
                     return 7;
