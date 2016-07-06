@@ -153,7 +153,7 @@ public class ConfigMonitor
                             List<String> contactsList = new ArrayList<>();
                             for(int i=0;i<jsonArray.length();i++)
                             {
-                                //contactsList.add(jsonArray.getJSONObject(i).getString("name"));
+                                contactsList.add(jsonArray.getJSONObject(i).getString("name"));
                                 contactsList.add(jsonArray.getJSONObject(i).getString("number"));
                             }
                             final SharedPreferences sharedPreferences = ConfigMonitor.this.mFilterPreferences.get(FilterType.CONTACT);
