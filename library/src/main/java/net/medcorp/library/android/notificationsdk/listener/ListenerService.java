@@ -523,7 +523,7 @@ public class ListenerService extends NotificationListenerService
     
     public void onNotificationPosted(final NotificationAdapter notificationAdapter) {
         Log.w(TAG, "<<<<<<<<<<<<New event (notification posted)---" +"key: "+notificationAdapter.getKey()+ ",KeyHashCode: "+ notificationAdapter.getKey().hashCode()+",category: " + notificationAdapter.getCategory() + ",package: " + notificationAdapter.getPackageName() + ",title: " + notificationAdapter.getTitle() + ",text: " + notificationAdapter.getText() + ",subtext: " + notificationAdapter.getSubtext() + ",people: " + Arrays.toString(notificationAdapter.getPeople()));
-        if (this.matchesFilter(notificationAdapter) && notificationAdapter.getCategory() !=255) {
+        if (this.matchesFilter(notificationAdapter) /*&& notificationAdapter.getCategory() !=255*/) {
             String s;
             if (this.isNotificationStored(notificationAdapter)) {
                 s = "net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_UPDATED";

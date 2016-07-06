@@ -6,12 +6,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 
 import net.medcorp.library.android.notificationsdk.config.mode.FilterMode;
 import net.medcorp.library.android.notificationsdk.config.mode.OverrideMode;
 import net.medcorp.library.android.notificationsdk.config.type.FilterType;
 import net.medcorp.library.android.notificationsdk.config.type.OverrideType;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -141,6 +146,24 @@ public class ConfigMonitor
         public void onReceive(final Context context, final Intent intent) {
             new AsyncTask<Void, Void, Void>() {
                 protected Void doInBackground(final Void... array) {
+                    if(intent != null && intent.getAction() != null && intent.getAction().equals("net.medcorp.library.android.notificationserver.config.ACTION_CONTACTS_CHANGED")) {
+                        JSONObject jsonObject = (JSONObject)intent.getExtras().getParcelable("net.medcorp.library.android.notificationserver.listener.EXTRA_NOTIFICATION_CONTACTS_LIST");                        //get all name & number
+                        try {
+                            JSONArray jsonArray = jsonObject.getJSONArray("contacts");
+                            List<String> contactsList = new ArrayList<>();
+                            for(int i=0;i<jsonArray.length();i++)
+                            {
+                                //contactsList.add(jsonArray.getJSONObject(i).getString("name"));
+                                contactsList.add(jsonArray.getJSONObject(i).getString("number"));
+                            }
+                            final SharedPreferences sharedPreferences = ConfigMonitor.this.mFilterPreferences.get(FilterType.CONTACT);
+                            //filter_mode
+                            sharedPreferences.edit().putString("filter_mode",FilterMode.WHITELIST.name()).apply();
+                            sharedPreferences.edit().putStringSet("filter_set",new HashSet<String>(contactsList)).apply();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
                     ConfigMonitor.this.rebuildCache();
                     return null;
                 }
