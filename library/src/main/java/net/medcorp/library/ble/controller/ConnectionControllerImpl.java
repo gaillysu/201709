@@ -287,10 +287,16 @@ import java.util.TimerTask;
         }
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(getSaveAddress());
         int state = device.getBondState();
+        Log.i(MEDBT.TAG, "pairDevice() function, bind state: " + state);
         if(state != BluetoothDevice.BOND_BONDED)
         {
             try {
-                Log.i(MEDBT.TAG, "bind state: " + device.getBondState() +",createBond() return:" + createBond(BluetoothDevice.class, device));
+                if(state == BluetoothDevice.BOND_BONDING)
+                {
+                    cancelBondProcess(BluetoothDevice.class, device);
+                }
+                boolean  ret = createBond(BluetoothDevice.class, device);
+                Log.i(MEDBT.TAG, "createBond() return: " + ret);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -309,10 +315,12 @@ import java.util.TimerTask;
 
         BluetoothDevice   device = bluetoothAdapter.getRemoteDevice(getSaveAddress());
         int state = device.getBondState();
+        Log.i(MEDBT.TAG, "unPairDevice() function, bind state: " + state);
         if(state == BluetoothDevice.BOND_BONDED)
         {
             try {
-                Log.i(MEDBT.TAG, "bind state: " + device.getBondState() + ",removeBond() return:" + removeBond(BluetoothDevice.class,device));
+                boolean ret = removeBond(BluetoothDevice.class,device);
+                Log.i(MEDBT.TAG, "removeBond() return: " + ret);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -320,11 +328,15 @@ import java.util.TimerTask;
         else if(state == BluetoothDevice.BOND_BONDING)
         {
             try {
-
-                Log.i(MEDBT.TAG, "bind state: " + device.getBondState() + ",removeBond() return:" + removeBond(BluetoothDevice.class,device));
+                boolean ret = cancelBondProcess(BluetoothDevice.class, device);
+                Log.i(MEDBT.TAG, "cancelBondProcess() return: " + ret);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        else if(state == BluetoothDevice.BOND_NONE)
+        {
+            Log.i(MEDBT.TAG, "already unpaired");
         }
     }
 
@@ -347,6 +359,13 @@ import java.util.TimerTask;
         return returnValue.booleanValue();
     }
 
+    boolean cancelBondProcess(Class btClass, BluetoothDevice device) throws Exception
+    {
+        Method createBondMethod = btClass.getMethod("cancelBondProcess");
+        Boolean returnValue = (Boolean) createBondMethod.invoke(device);
+        return returnValue.booleanValue();
+    }
+
     private boolean needPair()
     {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -357,7 +376,7 @@ import java.util.TimerTask;
         BluetoothDevice  device = bluetoothAdapter.getRemoteDevice(getSaveAddress());
         int state = device.getBondState();
         Log.i(MEDBT.TAG,"needPair(),current bind state: " + state);
-        if(state != BluetoothDevice.BOND_BONDED) {
+        if(state != BluetoothDevice.BOND_BONDED && state != BluetoothDevice.BOND_BONDING) {
             return true;
         }
         return false;
