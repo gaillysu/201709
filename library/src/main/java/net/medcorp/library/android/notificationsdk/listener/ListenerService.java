@@ -342,22 +342,29 @@ public class ListenerService extends NotificationListenerService
     }
     
     private boolean matchesNumberContactFilter(final String s) {
-        final Cursor query = this.getContentResolver().query(Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(s)), new String[] { "_id" }, (String)null, (String[])null, (String)null);
-        if (query != null) {
-            final ArrayList<String> list = new ArrayList<String>();
-            while (query.moveToNext()) {
-                list.add(String.valueOf(query.getInt(query.getColumnIndex("_id"))));
-            }
-            query.close();
-            final Iterator<String> iterator = list.iterator();
-            while (iterator.hasNext()) {
-                if (!this.mConfigMonitor.matchesFilter(FilterType.CONTACT, iterator.next())) {
-                    return false;
-                }
-            }
-            return true;
+//        final Cursor query = this.getContentResolver().query(Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(s)), new String[] { "_id" }, (String)null, (String[])null, (String)null);
+//        if (query != null) {
+//            final ArrayList<String> list = new ArrayList<String>();
+//            while (query.moveToNext()) {
+//                list.add(String.valueOf(query.getInt(query.getColumnIndex("_id"))));
+//            }
+//            query.close();
+//            final Iterator<String> iterator = list.iterator();
+//            while (iterator.hasNext()) {
+//                if (!this.mConfigMonitor.matchesFilter(FilterType.CONTACT, iterator.next())) {
+//                    return false;
+//                }
+//            }
+//            return true;
+//        }
+//        return this.mConfigMonitor.matchesFilterIfNoAvailableInfo(FilterType.CONTACT);
+        String number = s;
+        if(s.startsWith("tel:"))
+        {
+            number = s.substring(4);
         }
-        return this.mConfigMonitor.matchesFilterIfNoAvailableInfo(FilterType.CONTACT);
+        boolean ret = this.mConfigMonitor.matchesFilter(FilterType.CONTACT,number);
+        return ret;
     }
     
     private boolean matchesPackageFilter(final NotificationAdapter notificationAdapter) {
@@ -365,22 +372,25 @@ public class ListenerService extends NotificationListenerService
     }
     
     private boolean matchesPersonContactFilter(final String s) {
-        final Cursor query = this.getContentResolver().query(Uri.parse(s), new String[] { "_id" }, (String)null, (String[])null, (String)null);
-        if (query != null) {
-            final ArrayList<String> list = new ArrayList<String>();
-            while (query.moveToNext()) {
-                list.add(String.valueOf(query.getInt(query.getColumnIndex("_id"))));
-            }
-            query.close();
-            final Iterator<String> iterator = list.iterator();
-            while (iterator.hasNext()) {
-                if (!this.mConfigMonitor.matchesFilter(FilterType.CONTACT, iterator.next())) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return this.mConfigMonitor.matchesFilterIfNoAvailableInfo(FilterType.CONTACT);
+//        final Cursor query = this.getContentResolver().query(Uri.parse(s), new String[] { "_id" }, (String)null, (String[])null, (String)null);
+//        if (query != null) {
+//            final ArrayList<String> list = new ArrayList<String>();
+//            while (query.moveToNext()) {
+//                list.add(String.valueOf(query.getInt(query.getColumnIndex("_id"))));
+//            }
+//            query.close();
+//            final Iterator<String> iterator = list.iterator();
+//            while (iterator.hasNext()) {
+//                if (!this.mConfigMonitor.matchesFilter(FilterType.CONTACT, iterator.next())) {
+//                    return false;
+//                }
+//            }
+//            return true;
+//        }
+//        return this.mConfigMonitor.matchesFilterIfNoAvailableInfo(FilterType.CONTACT);
+        String name =s;
+        boolean ret = this.mConfigMonitor.matchesFilter(FilterType.CONTACT,name);
+        return ret;
     }
     
     private boolean matchesPriorityFilter(final NotificationAdapter notificationAdapter) {
@@ -627,7 +637,6 @@ public class ListenerService extends NotificationListenerService
                 Log.w(this.TAG, "Unknown broadcast received");
                 return;
             }
-            Log.d(this.TAG, "Received a phone alert");
             final Bundle extras = intent.getExtras();
             if (extras == null || extras.get("state") == null) {
                 Log.w(this.TAG, "Broadcast is missing extras");
@@ -641,6 +650,7 @@ public class ListenerService extends NotificationListenerService
             else {
                 phoneNumber = null;
             }
+            Log.d(this.TAG, "Received a phone alert: " + status + ",phoneNumber: " + phoneNumber);
             if (TelephonyManager.EXTRA_STATE_IDLE.equals(status)) {
                 if (TelephonyManager.EXTRA_STATE_RINGING.equals(this.mState)) {
                     this.onReceiveMissedCall(context, this.mNumber);
@@ -681,29 +691,30 @@ public class ListenerService extends NotificationListenerService
         @Override
         public void onConfigChanged() {
             Log.d(this.TAG, "Config settings have been changed, cascading changes");
-            final HashSet set = new HashSet();
-            set.addAll(ConfigHelper.getCallPackages((Context)ListenerService.this));
-            set.addAll(ConfigHelper.getANSCallPackages());
-            set.addAll(ConfigHelper.getSMSPackages((Context)ListenerService.this));
-            set.addAll(ConfigHelper.getANSSMSPackages());
-            final NotificationAdapter[] access$200 = ListenerService.this.getAllNotifications();
-            for (int length = access$200.length, i = 0; i < length; ++i) {
-                final NotificationAdapter notificationAdapter = access$200[i];
-                final boolean access$201 = ListenerService.this.isNotificationStored(notificationAdapter);
-                final boolean access$202 = ListenerService.this.matchesFilter(notificationAdapter, set);
-                if (access$201 && !access$202) {
-                    ListenerService.this.removeNotification(notificationAdapter);
-                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_REMOVED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
-                }
-                else if (!access$201 && access$202) {
-                    ListenerService.this.storeNotification(notificationAdapter);
-                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_POSTED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
-                }
-                else if (access$201 && !ListenerService.this.getStoredSummary(notificationAdapter.getKey()).equals((Object)ListenerService.this.getNotificationSummary(notificationAdapter))) {
-                    ListenerService.this.storeNotification(notificationAdapter);
-                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_UPDATED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
-                }
-            }
+            //TODO I REMOVED BELOW CODE ,because getAllNotifications() will get crash by security cause */
+//            final HashSet set = new HashSet();
+//            set.addAll(ConfigHelper.getCallPackages((Context)ListenerService.this));
+//            set.addAll(ConfigHelper.getANSCallPackages());
+//            set.addAll(ConfigHelper.getSMSPackages((Context)ListenerService.this));
+//            set.addAll(ConfigHelper.getANSSMSPackages());
+//            final NotificationAdapter[] access$200 = ListenerService.this.getAllNotifications();
+//            for (int length = access$200.length, i = 0; i < length; ++i) {
+//                final NotificationAdapter notificationAdapter = access$200[i];
+//                final boolean access$201 = ListenerService.this.isNotificationStored(notificationAdapter);
+//                final boolean access$202 = ListenerService.this.matchesFilter(notificationAdapter, set);
+//                if (access$201 && !access$202) {
+//                    ListenerService.this.removeNotification(notificationAdapter);
+//                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_REMOVED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
+//                }
+//                else if (!access$201 && access$202) {
+//                    ListenerService.this.storeNotification(notificationAdapter);
+//                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_POSTED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
+//                }
+//                else if (access$201 && !ListenerService.this.getStoredSummary(notificationAdapter.getKey()).equals((Object)ListenerService.this.getNotificationSummary(notificationAdapter))) {
+//                    ListenerService.this.storeNotification(notificationAdapter);
+//                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_UPDATED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
+//                }
+//            }
         }
     }
     

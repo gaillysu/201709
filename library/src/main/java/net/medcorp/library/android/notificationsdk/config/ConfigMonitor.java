@@ -146,24 +146,6 @@ public class ConfigMonitor
         public void onReceive(final Context context, final Intent intent) {
             new AsyncTask<Void, Void, Void>() {
                 protected Void doInBackground(final Void... array) {
-                    if(intent != null && intent.getAction() != null && intent.getAction().equals("net.medcorp.library.android.notificationserver.config.ACTION_CONTACTS_CHANGED")) {
-                        JSONObject jsonObject = (JSONObject)intent.getExtras().getParcelable("net.medcorp.library.android.notificationserver.listener.EXTRA_NOTIFICATION_CONTACTS_LIST");                        //get all name & number
-                        try {
-                            JSONArray jsonArray = jsonObject.getJSONArray("contacts");
-                            List<String> contactsList = new ArrayList<>();
-                            for(int i=0;i<jsonArray.length();i++)
-                            {
-                                contactsList.add(jsonArray.getJSONObject(i).getString("name"));
-                                contactsList.add(jsonArray.getJSONObject(i).getString("number"));
-                            }
-                            final SharedPreferences sharedPreferences = ConfigMonitor.this.mFilterPreferences.get(FilterType.CONTACT);
-                            //filter_mode
-                            sharedPreferences.edit().putString("filter_mode",FilterMode.WHITELIST.name()).apply();
-                            sharedPreferences.edit().putStringSet("filter_set",new HashSet<String>(contactsList)).apply();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
                     ConfigMonitor.this.rebuildCache();
                     return null;
                 }
