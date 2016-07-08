@@ -24,6 +24,12 @@ public final class ConfigConstants
     public static final String SETTINGS = "notification_settings";
     public static Set<String> SMS_APPS;
     public static Set<String> SOCIAL_APPS;
+
+    //here add some the third-party apps package to match different android phone models, if we use package filter mode, we fix these package list here.
+    public static Set<String> THIRD_PARTY_MMS_APPS;
+    public static Set<String> THIRD_PARTY_EMAIL_APPS;
+    public static Set<String> THIRD_PARTY_IM_APPS;
+
     
     static {
         ConfigConstants.DIALER_APPS = new HashSet<String>(Arrays.asList("com.android.dialer", "com.android.server.telecom", "com.android.providers.telephony", "com.android.incallui", "com.android.phone"));
@@ -33,5 +39,10 @@ public final class ConfigConstants
         ConfigConstants.MESSENGER_APPS = new HashSet<String>(Arrays.asList("com.whatsapp", "com.facebook.orca", "com.tencent.mm", "jp.naver.line.android", "com.google.android.talk", "org.telegram.messenger"));
         ConfigConstants.EMAIL_APPS = new HashSet<String>(Arrays.asList("com.yahoo.mobile.client.android.mail", "com.google.android.gm", "com.google.android.apps.inbox", "com.microsoft.office.outlook"));
         ConfigConstants.SOCIAL_APPS = new HashSet<String>(Arrays.asList("com.facebook.katana", "com.google.android.apps.plus", "com.instagram.android", "com.snapchat.android", "com.linkedin.android", "com.twitter.android", "com.pinterest"));
+
+        //third-party packages
+        ConfigConstants.THIRD_PARTY_MMS_APPS = new HashSet<String>(Arrays.asList("com.google.android.talk","com.android.mms","com.google.android.apps.messaging","com.sonyericsson.conversations","com.htc.sense.mms","com.google.android.talk"));
+        ConfigConstants.THIRD_PARTY_EMAIL_APPS = new HashSet<String>(Arrays.asList("com.android.email","com.google.android.email","com.google.android.gm","com.kingsoft.email","com.tencent.androidqqmail","com.outlook.Z7"));
+        ConfigConstants.THIRD_PARTY_IM_APPS = new HashSet<String>(Arrays.asList("com.tencent.mm","com.facebook.katana","com.whatsapp"));
     }
 }

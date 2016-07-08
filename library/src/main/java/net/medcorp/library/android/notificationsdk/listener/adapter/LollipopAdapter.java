@@ -3,6 +3,8 @@ package net.medcorp.library.android.notificationsdk.listener.adapter;
 import android.service.notification.*;
 import android.annotation.*;
 
+import net.medcorp.library.android.notificationsdk.config.ConfigConstants;
+
 public class LollipopAdapter extends KitKatAdapter
 {
     public LollipopAdapter(final StatusBarNotification statusBarNotification) {
@@ -70,28 +72,15 @@ public class LollipopAdapter extends KitKatAdapter
         }
         //TODO here make a patch that on xiaomi phone, the mSbn.getNotification().category is null, we continue it with package name
         //we should list all the possible packages of more apps,pls refer to ConfigConstants.java
-        if(mSbn.getPackageName().equals("com.google.android.talk")
-                || mSbn.getPackageName().equals("com.android.mms")
-                || mSbn.getPackageName().equals("com.google.android.apps.messaging")
-                || mSbn.getPackageName().equals("com.sonyericsson.conversations")
-                || mSbn.getPackageName().equals("com.htc.sense.mms")
-                || mSbn.getPackageName().equals("com.google.android.talk")
-                )
+        if(ConfigConstants.THIRD_PARTY_MMS_APPS.contains(mSbn.getPackageName()))
         {
             return 242;
         }
-        else if(mSbn.getPackageName().equals("com.android.email")
-                || mSbn.getPackageName().equals("com.google.android.email")
-                || mSbn.getPackageName().equals("com.google.android.gm")
-                || mSbn.getPackageName().equals("com.kingsoft.email")
-                || mSbn.getPackageName().equals("com.tencent.androidqqmail")
-                || mSbn.getPackageName().equals("com.outlook.Z7"))
+        else if(ConfigConstants.THIRD_PARTY_EMAIL_APPS.contains(mSbn.getPackageName()))
         {
             return 3;
         }
-        else if(mSbn.getPackageName().equals("com.facebook.katana")
-                ||mSbn.getPackageName().equals("com.tencent.mm")
-                ||mSbn.getPackageName().equals("com.whatsapp"))
+        else if(ConfigConstants.THIRD_PARTY_IM_APPS.contains(mSbn.getPackageName()))
         {
             return 11;
         }
