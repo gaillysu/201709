@@ -750,4 +750,15 @@ public class MEDBTService extends Service {
 		}
 	}
 
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		Log.w("Karl","Service died");
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		return START_STICKY_COMPATIBILITY;
+	}
+
 }
