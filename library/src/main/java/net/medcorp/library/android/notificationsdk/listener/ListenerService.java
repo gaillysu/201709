@@ -58,7 +58,7 @@ import java.util.Set;
 
 public class ListenerService extends NotificationListenerService
 {
-    private final String TAG = "Karl";
+    private final String TAG = "ListenerService";
     private static boolean mRunning;
     private Map<String, NotificationAdapter> mArtificialMap;
     private CallReceiver mCallReceiver;
@@ -342,22 +342,6 @@ public class ListenerService extends NotificationListenerService
     }
     
     private boolean matchesNumberContactFilter(final String s) {
-//        final Cursor query = this.getContentResolver().query(Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(s)), new String[] { "_id" }, (String)null, (String[])null, (String)null);
-//        if (query != null) {
-//            final ArrayList<String> list = new ArrayList<String>();
-//            while (query.moveToNext()) {
-//                list.add(String.valueOf(query.getInt(query.getColumnIndex("_id"))));
-//            }
-//            query.close();
-//            final Iterator<String> iterator = list.iterator();
-//            while (iterator.hasNext()) {
-//                if (!this.mConfigMonitor.matchesFilter(FilterType.CONTACT, iterator.next())) {
-//                    return false;
-//                }
-//            }
-//            return true;
-//        }
-//        return this.mConfigMonitor.matchesFilterIfNoAvailableInfo(FilterType.CONTACT);
         String number = s;
         if(s.startsWith("tel:"))
         {
@@ -372,31 +356,13 @@ public class ListenerService extends NotificationListenerService
     }
     
     private boolean matchesPersonContactFilter(final String s) {
-//        final Cursor query = this.getContentResolver().query(Uri.parse(s), new String[] { "_id" }, (String)null, (String[])null, (String)null);
-//        if (query != null) {
-//            final ArrayList<String> list = new ArrayList<String>();
-//            while (query.moveToNext()) {
-//                list.add(String.valueOf(query.getInt(query.getColumnIndex("_id"))));
-//            }
-//            query.close();
-//            final Iterator<String> iterator = list.iterator();
-//            while (iterator.hasNext()) {
-//                if (!this.mConfigMonitor.matchesFilter(FilterType.CONTACT, iterator.next())) {
-//                    return false;
-//                }
-//            }
-//            return true;
-//        }
-//        return this.mConfigMonitor.matchesFilterIfNoAvailableInfo(FilterType.CONTACT);
-        String name =s;
-        boolean ret = this.mConfigMonitor.matchesFilter(FilterType.CONTACT,name);
-        return ret;
+        return this.mConfigMonitor.matchesFilter(FilterType.CONTACT, s);
     }
     
     private boolean matchesPriorityFilter(final NotificationAdapter notificationAdapter) {
         return this.mConfigMonitor.matchesFilter(FilterType.PRIORITY, String.valueOf(notificationAdapter.getPriority()));
     }
-    
+
     private boolean matchesServiceFilter(final StatusBarNotification statusBarNotification) {
         //no found 0x162 define, here always return true
         return true;//(statusBarNotification.getNotification().flags & 0x162) == 0x0;
@@ -524,14 +490,22 @@ public class ListenerService extends NotificationListenerService
             this.onNotificationPosted(activeNotifications[i]);
         }
     }
-    
+
+    @Override
+    public void onNotificationPosted(StatusBarNotification sbn, RankingMap rankingMap) {
+        super.onNotificationPosted(sbn, rankingMap);
+        Log.w("Karl","Hallo?");
+    }
+
+    @Override
     public void onNotificationPosted(final StatusBarNotification statusBarNotification) {
+        Log.w("Karl","Yoohooo!");
         if (this.matchesServiceFilter(statusBarNotification) && this.matchesSummaryFilter(statusBarNotification)) {
             this.onNotificationPosted(this.getAdapter(statusBarNotification));
         }
     }
-    
-    public void onNotificationPosted(final NotificationAdapter notificationAdapter) {
+
+    private void onNotificationPosted(final NotificationAdapter notificationAdapter) {
         Log.w(TAG, "<<<<<<<<<<<<New event (notification posted)---" +"key: "+notificationAdapter.getKey()+ ",KeyHashCode: "+ notificationAdapter.getKey().hashCode()+",category: " + notificationAdapter.getCategory() + ",package: " + notificationAdapter.getPackageName() + ",title: " + notificationAdapter.getTitle() + ",text: " + notificationAdapter.getText() + ",subtext: " + notificationAdapter.getSubtext() + ",people: " + Arrays.toString(notificationAdapter.getPeople()));
         if (this.matchesFilter(notificationAdapter) /*&& notificationAdapter.getCategory() !=255*/) {
             String s;
@@ -575,7 +549,7 @@ public class ListenerService extends NotificationListenerService
         private String mState;
         
         public CallReceiver(final Context context) {
-            this.TAG = "Karl";
+            this.TAG = "ListenerService";
             final TelephonyManager telephonyManager = (TelephonyManager)context.getSystemService("phone");
             this.mNumber = null;
             switch (telephonyManager.getCallState()) {
@@ -691,30 +665,6 @@ public class ListenerService extends NotificationListenerService
         @Override
         public void onConfigChanged() {
             Log.d(this.TAG, "Config settings have been changed, cascading changes");
-            //TODO I REMOVED BELOW CODE ,because getAllNotifications() will get crash by security cause */
-//            final HashSet set = new HashSet();
-//            set.addAll(ConfigHelper.getCallPackages((Context)ListenerService.this));
-//            set.addAll(ConfigHelper.getANSCallPackages());
-//            set.addAll(ConfigHelper.getSMSPackages((Context)ListenerService.this));
-//            set.addAll(ConfigHelper.getANSSMSPackages());
-//            final NotificationAdapter[] access$200 = ListenerService.this.getAllNotifications();
-//            for (int length = access$200.length, i = 0; i < length; ++i) {
-//                final NotificationAdapter notificationAdapter = access$200[i];
-//                final boolean access$201 = ListenerService.this.isNotificationStored(notificationAdapter);
-//                final boolean access$202 = ListenerService.this.matchesFilter(notificationAdapter, set);
-//                if (access$201 && !access$202) {
-//                    ListenerService.this.removeNotification(notificationAdapter);
-//                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_REMOVED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
-//                }
-//                else if (!access$201 && access$202) {
-//                    ListenerService.this.storeNotification(notificationAdapter);
-//                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_POSTED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
-//                }
-//                else if (access$201 && !ListenerService.this.getStoredSummary(notificationAdapter.getKey()).equals((Object)ListenerService.this.getNotificationSummary(notificationAdapter))) {
-//                    ListenerService.this.storeNotification(notificationAdapter);
-//                    LocalBroadcastManager.getInstance((Context)ListenerService.this).sendBroadcast(new Intent("net.medcorp.library.android.notificationserver.gatt.ACTION_NOTIFICATION_UPDATED").putExtra("net.medcorp.library.android.notificationserver.gatt.EXTRA_NOTIFICATION_SUMMARY", (Parcelable)ListenerService.this.getNotificationSummary(notificationAdapter)));
-//                }
-//            }
         }
     }
     
@@ -723,7 +673,7 @@ public class ListenerService extends NotificationListenerService
         private final String TAG;
         
         private NotificationReceiver() {
-            this.TAG =  "Karl";
+            this.TAG =  "ListenerService";
         }
         
         private void onReceiveCustom(final Bundle bundle) {
