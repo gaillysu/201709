@@ -364,6 +364,8 @@ public class ListenerService extends NotificationListenerService
     }
 
     private boolean matchesServiceFilter(final StatusBarNotification statusBarNotification) {
+        Log.w(TAG,"statusBarNotification.getNotification().flags = " + statusBarNotification.getNotification().flags);
+        //TODO I don't see why exclude these notifications which flags is 0x162 = 0x100 | 0x40 | 0x20 |0x02, I test wechat,its notification flags is 0x101
         //no found 0x162 define, here always return true
         return true;//(statusBarNotification.getNotification().flags & 0x162) == 0x0;
     }
