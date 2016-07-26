@@ -347,8 +347,7 @@ public class ListenerService extends NotificationListenerService
         {
             number = s.substring(4);
         }
-        boolean ret = this.mConfigMonitor.matchesFilter(FilterType.CONTACT,number);
-        return ret;
+        return this.mConfigMonitor.matchesFilter(FilterType.CONTACT,number);
     }
     
     private boolean matchesPackageFilter(final NotificationAdapter notificationAdapter) {
