@@ -9,8 +9,6 @@ import android.os.Build;
 import android.provider.Telephony;
 import android.support.annotation.Nullable;
 
-import net.medcorp.library.android.notificationsdk.R;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -91,13 +89,13 @@ public final class ConfigHelper
     
     public static String getPackageLabel(final Context context, final String s) {
         if ("ans_incoming_call".equals(s)) {
-            return "incoming call";//context.getString(R.string.incoming_call);
+            return "incoming call";
         }
         if ("ans_missed_call".equals(s)) {
-            return "missed call";//context.getString(R.string.missed_call);
+            return "missed call";
         }
         if ("ans_sms".equals(s)) {
-            return "unread sms";//context.getString(R.string.unread_sms);
+            return "unread sms";
         }
         try {
             return context.getPackageManager().getApplicationLabel(context.getPackageManager().getApplicationInfo(s, 0)).toString();
