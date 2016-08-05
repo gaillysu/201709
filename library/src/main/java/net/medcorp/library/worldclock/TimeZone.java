@@ -1,6 +1,6 @@
 package net.medcorp.library.worldclock;
 
-import com.google.gson.annotations.SerializedName;
+import android.util.Log;
 
 import io.realm.RealmObject;
 
@@ -9,50 +9,35 @@ import io.realm.RealmObject;
  */
 
 public class TimeZone extends RealmObject {
-    @SerializedName("id")
     private int id;
 
-    @SerializedName("name")
     private String name;
 
-    @SerializedName("gmt")
     private String gmt;
 
-    @SerializedName("offset")
     private short offset;
 
-    @SerializedName("std_name")
-    private String stdName;
+    private String std_name;
 
-    @SerializedName("dst_month_start")
-    private short dstMonthStart;
+    private short dst_month_start;
 
-    @SerializedName("dst_day_week_start")
-    private short dstDayWeekStart;
+    private short dst_day_week_start;
 
-    @SerializedName("dst_nth_day_start")
-    private short dstNthDayStart;
+    private short dst_nth_day_start;
 
-    @SerializedName("dst_time_start")
-    private String dstTimeStart;
+    private String dst_time_start;
 
-    @SerializedName("dst_name")
-    private String dstName;
+    private String dst_name;
 
-    @SerializedName("dst_time_offset")
-    private short dstTimeOffset;
+    private short dst_time_offset;
 
-    @SerializedName("dst_month_end")
-    private short dstMonthEnd;
+    private short dst_month_end;
 
-    @SerializedName("dst_day_week_end")
-    private short dstDayWeekEnd;
+    private short dst_day_week_end;
 
-    @SerializedName("dst_nth_day_end")
-    private short dstNthDayEnd;
+    private short dst_nth_day_end;
 
-    @SerializedName("dst_time_end")
-    private String dstTimeEnd;
+    private String dst_time_end;
 
 
     public TimeZone(){
@@ -91,104 +76,116 @@ public class TimeZone extends RealmObject {
         this.offset = offset;
     }
 
-    public String getStdName() {
-        return stdName;
+    public String getStd_name() {
+        return std_name;
     }
 
-    public void setStdName(String stdName) {
-        this.stdName = stdName;
+    public void setStd_name(String std_name) {
+        this.std_name = std_name;
     }
 
-    public short getDstMonthStart() {
-        return dstMonthStart;
+    public short getDst_month_start() {
+        return dst_month_start;
     }
 
-    public void setDstMonthStart(short dstMonthStart) {
-        this.dstMonthStart = dstMonthStart;
+    public void setDst_month_start(short dst_month_start) {
+        this.dst_month_start = dst_month_start;
     }
 
-    public short getDstDayWeekStart() {
-        return dstDayWeekStart;
+    public short getDst_day_week_start() {
+        return dst_day_week_start;
     }
 
-    public void setDstDayWeekStart(short dstDayWeekStart) {
-        this.dstDayWeekStart = dstDayWeekStart;
+    public void setDst_day_week_start(short dst_day_week_start) {
+        this.dst_day_week_start = dst_day_week_start;
     }
 
-    public short getDstNthDayStart() {
-        return dstNthDayStart;
+    public short getDst_nth_day_start() {
+        return dst_nth_day_start;
     }
 
-    public void setDstNthDayStart(short dstNthDayStart) {
-        this.dstNthDayStart = dstNthDayStart;
+    public void setDst_nth_day_start(short dst_nth_day_start) {
+        this.dst_nth_day_start = dst_nth_day_start;
     }
 
-    public String getDstTimeStart() {
-        return dstTimeStart;
+    public String getDst_time_start() {
+        return dst_time_start;
     }
 
-    public void setDstTimeStart(String dstTimeStart) {
-        this.dstTimeStart = dstTimeStart;
+    public void setDst_time_start(String dst_time_start) {
+        this.dst_time_start = dst_time_start;
     }
 
-    public short getDstTimeOffset() {
-        return dstTimeOffset;
+    public short getDst_time_offset() {
+        return dst_time_offset;
     }
 
-    public void setDstTimeOffset(short dstTimeOffset) {
-        this.dstTimeOffset = dstTimeOffset;
+    public void setDst_time_offset(short dst_time_offset) {
+        this.dst_time_offset = dst_time_offset;
     }
 
-    public short getDstMonthEnd() {
-        return dstMonthEnd;
+    public short getDst_month_end() {
+        return dst_month_end;
     }
 
-    public void setDstMonthEnd(short dstMonthEnd) {
-        this.dstMonthEnd = dstMonthEnd;
+    public void setDst_month_end(short dst_month_end) {
+        this.dst_month_end = dst_month_end;
     }
 
-    public short getDstDayWeekEnd() {
-        return dstDayWeekEnd;
+    public short getDst_day_week_end() {
+        return dst_day_week_end;
     }
 
-    public void setDstDayWeekEnd(short dstDayWeekEnd) {
-        this.dstDayWeekEnd = dstDayWeekEnd;
+    public void setDst_day_week_end(short dst_day_week_end) {
+        this.dst_day_week_end = dst_day_week_end;
     }
 
-    public short getDstNthDayEnd() {
-        return dstNthDayEnd;
+    public short getDst_nth_day_end() {
+        return dst_nth_day_end;
     }
 
-    public void setDstNthDayEnd(short dstNthDayEnd) {
-        this.dstNthDayEnd = dstNthDayEnd;
+    public void setDst_nth_day_end(short dst_nth_day_end) {
+        this.dst_nth_day_end = dst_nth_day_end;
     }
 
-    public String getDstTimeEnd() {
-        return dstTimeEnd;
+    public String getDst_time_end() {
+        return dst_time_end;
     }
 
-    public void setDstTimeEnd(String dstTimeEnd) {
-        this.dstTimeEnd = dstTimeEnd;
+    public void setDst_time_end(String dst_time_end) {
+        this.dst_time_end = dst_time_end;
     }
 
-    public String getDstName() {
-        return dstName;
+    public String getDst_name() {
+        return dst_name;
     }
 
-    public void setDstName(String dstName) {
-        this.dstName = dstName;
+    public void setDst_name(String dst_name) {
+        this.dst_name = dst_name;
     }
 
-    //    realm.beginTransaction();
-    //    dbObj obj = realm.createObject(dbObj.class);
-    //
-    //    // increatement index
-    //    int nextID = (int) (realm.where(dbObj.class).maximumInt("id") + 1);
-    //    // insert new value
-    //    obj.setId(nextID);
-    //    obj.setName("thang");
-    //    obj.setAge(10);
-    //
-    //    realm.commitTransaction();
+    public void log(String tag){
+        Log.w(tag,toString());
+    }
+
+    @Override
+    public String toString() {
+        return  "Id = " + getId()+ "\n" +
+                "Name = " + getName() + "\n" +
+                "Gmt = " + getGmt() + "\n" +
+                "Offset = " + getOffset() + "\n" +
+                "StdName = " + getStd_name() + "\n" +
+                "DstMonthStart = " + getDst_month_start() + "\n" +
+                "DstDayWeekStart = " + getDst_day_week_start() + "\n" +
+                "DstNthDayStart = " + getDst_nth_day_start() + "\n" +
+                "DstTimeStart = " + getDst_time_start() + "\n" +
+                "DstName = " + getDst_name() + "\n" +
+                "Name = " + getName() + "\n" +
+                "DstMonthEnd = " + getDst_month_end() + "\n" +
+                "DstDayWeekEnd = " + getDst_day_week_end() + "\n" +
+                "DstNthDayEnd = " + getDst_nth_day_end() + "\n" +
+                "DstTimeEnd = " + getDst_time_end() + "\n";
+    }
+
 }
 

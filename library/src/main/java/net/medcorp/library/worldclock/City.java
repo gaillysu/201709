@@ -1,6 +1,8 @@
 package net.medcorp.library.worldclock;
 
-import com.google.gson.annotations.SerializedName;
+import android.util.Log;
+
+import java.util.Calendar;
 
 import io.realm.RealmObject;
 
@@ -10,26 +12,24 @@ import io.realm.RealmObject;
 
 public class City extends RealmObject {
 
-    @SerializedName("id")
     private int id;
 
-    @SerializedName("name")
     private String name;
 
-    @SerializedName("gmt")
-    private String gmtName;
+    private String gmt;
 
-    @SerializedName("country")
     private String country;
 
-    @SerializedName("lat")
     private double lat;
 
-    @SerializedName("lng")
     private double lng;
 
-    @SerializedName("timezone_id")
-    private TimeZone timezone;
+    private String timezone;
+
+    private TimeZone timezoneRef;
+
+    private boolean selected;
+
     public City(){
 
     }
@@ -50,12 +50,12 @@ public class City extends RealmObject {
         this.name = name;
     }
 
-    public String getGmtName() {
-        return gmtName;
+    public String getGmt() {
+        return gmt;
     }
 
-    public void setGmtName(String gmtName) {
-        this.gmtName = gmtName;
+    public void setGmt(String gmt) {
+        this.gmt = gmt;
     }
 
     public String getCountry() {
@@ -82,11 +82,47 @@ public class City extends RealmObject {
         this.lng = lng;
     }
 
-    public TimeZone getTimezone() {
+    public void setTimezone(TimeZone timezoneRef) {
+        this.timezoneRef = timezoneRef;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
+    }
+
+    public String getTimezone() {
         return timezone;
     }
 
-    public void setTimezone(TimeZone timezone) {
-        this.timezone = timezone;
+    public TimeZone getTimezoneRef() {
+        return timezoneRef;
+    }
+
+    public void setTimezoneRef(TimeZone timezoneRef) {
+        this.timezoneRef = timezoneRef;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+    public boolean hasDST(){
+        return getTimezoneRef().getDst_time_offset() > 0;
+    }
+
+    public int getOffSetFromLocalTime() {
+        if (hasDST()){
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR));
+            calendar.set(Calendar.MONTH, getTimezoneRef().getDst_month_start());
+            calendar.set(Calendar.WEEK_OF_MONTH, getTimezoneRef().getDst_nth_day_start());
+            calendar.set(Calendar.DAY_OF_WEEK, getTimezoneRef().getDst_day_week_start());
+            Log.w("Karl","lolol: " + getTimezoneRef().getDst_time_start());
+        }
+        return 0;
     }
 }
