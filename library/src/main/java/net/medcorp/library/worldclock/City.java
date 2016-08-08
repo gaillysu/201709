@@ -2,9 +2,14 @@ package net.medcorp.library.worldclock;
 
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 import io.realm.RealmObject;
+
+import static net.medcorp.library.worldclock.util.DaylightSavingTimeUtil.getEndDST;
+import static net.medcorp.library.worldclock.util.DaylightSavingTimeUtil.getStartDST;
 
 /**
  * Created by Karl on 8/4/16.
@@ -111,17 +116,21 @@ public class City extends RealmObject {
     }
 
     public boolean hasDST(){
-        return getTimezoneRef().getDst_time_offset() > 0;
+        return getTimezoneRef().getDst_time_offset() != 0;
     }
 
     public int getOffSetFromLocalTime() {
         if (hasDST()){
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR));
-            calendar.set(Calendar.MONTH, getTimezoneRef().getDst_month_start());
-            calendar.set(Calendar.WEEK_OF_MONTH, getTimezoneRef().getDst_nth_day_start());
-            calendar.set(Calendar.DAY_OF_WEEK, getTimezoneRef().getDst_day_week_start());
-            Log.w("Karl","lolol: " + getTimezoneRef().getDst_time_start());
+            Calendar start = getStartDST(timezoneRef);
+            Calendar end = getEndDST(timezoneRef);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSSSSS",Locale.US);
+            Log.w("Karl","CITY: " + getName());
+            Log.w("Karl","Start = " + simpleDateFormat.format(start.getTimeInMillis()));
+            Log.w("Karl","End = " + simpleDateFormat.format(end.getTimeInMillis()));
+            if (start.after(Calendar.getInstance()) && end.before(Calendar.getInstance())){
+                Log.w("Karl","Its daylight saving time now!");
+                return getTimezoneRef().getDst_time_offset();
+            }
         }
         return 0;
     }
