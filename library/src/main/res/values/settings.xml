@@ -7,7 +7,7 @@
     <string name="config_preferences_timezone_db_saved_version">timezone_db_version</string>
 
     <!-- DON'T BUMP THIS VERSION IF YOU ARE NOT SURE WHAT YOU ARE DOING.-->
-    <integer name="config_preferences_cities_db_version_current">12</integer>
-    <integer name="config_preferences_timezone_db_version_current">12</integer>
+    <integer name="config_preferences_cities_db_version_current">1</integer>
+    <integer name="config_preferences_timezone_db_version_current">1</integer>
 
 </resources>
