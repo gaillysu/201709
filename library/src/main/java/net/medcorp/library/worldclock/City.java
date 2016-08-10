@@ -2,6 +2,8 @@ package net.medcorp.library.worldclock;
 
 import android.util.Log;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -27,7 +29,8 @@ public class City extends RealmObject {
 
     private double lng;
 
-    private int timezone_id;
+    @SerializedName("timezone_id")
+    private int timezoneId;
 
     private TimeZone timezoneRef;
 
@@ -93,16 +96,16 @@ public class City extends RealmObject {
         this.selected = selected;
     }
 
-    public int getTimezone_id() {
-        return timezone_id;
+    public int getTimezoneId() {
+        return timezoneId;
     }
 
-    public void setTimezone_id(int timezone_id) {
-        this.timezone_id = timezone_id;
+    public void setTimezoneId(int timezoneId) {
+        this.timezoneId = timezoneId;
     }
 
     public boolean hasDST(){
-        return getTimezoneRef().getDst_time_offset() != 0;
+        return getTimezoneRef().getDstTimeOffset() != 0;
     }
 
     public int getOffSetFromGMT() {
@@ -110,17 +113,11 @@ public class City extends RealmObject {
             Calendar start = getStartDST(timezoneRef);
             Calendar end = getEndDST(timezoneRef);
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSSSSS",Locale.US);
-            Log.w("Karl","CITY: " + getName());
-            Log.w("Karl","Start = " + simpleDateFormat.format(start.getTimeInMillis()));
-            Log.w("Karl","End = " + simpleDateFormat.format(end.getTimeInMillis()));
                 if (start.before(Calendar.getInstance()) && end.after(Calendar.getInstance())){
-                Log.w("Karl","Its daylight saving time now!");
-                    Log.w("Karl","Normal offset = " + getTimezoneRef().getGmt_offset());
-                    Log.w("Karl","DST T  offset = " + getTimezoneRef().getDst_time_offset());
-                return getTimezoneRef().getGmt_offset() + getTimezoneRef().getDst_time_offset();
+                return getTimezoneRef().getGmtTimeOffset() + getTimezoneRef().getDstTimeOffset();
             }
         }
-        return getTimezoneRef().getGmt_offset();
+        return getTimezoneRef().getGmtTimeOffset();
     }
 
     public void log(String tag) {
@@ -129,7 +126,7 @@ public class City extends RealmObject {
         Log.w(tag,"country  = " + getCountry());
         Log.w(tag,"lat      = " + getLat());
         Log.w(tag,"lng      = " + getLng());
-        Log.w(tag,"tzid     = " + getTimezone_id());
+        Log.w(tag,"tzid     = " + getTimezoneId());
         Log.w(tag,"tzr      = " + getTimezoneRef());
     }
 }

@@ -2,6 +2,8 @@ package net.medcorp.library.worldclock;
 
 import android.util.Log;
 
+import com.google.gson.annotations.SerializedName;
+
 import io.realm.RealmObject;
 
 /**
@@ -9,31 +11,45 @@ import io.realm.RealmObject;
  */
 
 public class TimeZone extends RealmObject {
+
+    @SerializedName("id")
     private int id;
 
+    @SerializedName("name")
     private String name;
 
+    @SerializedName("gmt")
     private String gmt;
 
-    private short gmt_offset;
+    @SerializedName("gmt_offset")
+    private short gmtTimeOffset;
 
-    private String std_name;
+    @SerializedName("std_name")
+    private String stdName;
 
-    private short dst_month_start;
+    @SerializedName("dst_month_start")
+    private short dstMonthStart;
 
-    private short dst_day_in_month_start;
+    @SerializedName("dst_day_in_month_start")
+    private short dstDayInMonthStart;
 
-    private String dst_time_start;
+    @SerializedName("dst_time_start")
+    private String dstTimeStart;
 
-    private String dst_name;
+    @SerializedName("dst_name")
+    private String dstName;
 
-    private short dst_time_offset;
+    @SerializedName("dst_time_offset")
+    private short dstTimeOffset;
 
-    private short dst_month_end;
+    @SerializedName("dst_month_end")
+    private short dstMonthEnd;
 
-    private short dst_day_in_month_end;
+    @SerializedName("dst_day_in_month_end")
+    private short dstDayInMonthEnd;
 
-    private String dst_time_end;
+    @SerializedName("dst_time_end")
+    private String dstTimeEnd;
 
 
     public TimeZone(){
@@ -64,71 +80,84 @@ public class TimeZone extends RealmObject {
         this.gmt = gmt;
     }
 
-    public short getGmt_offset() {
-        return gmt_offset;
+    public short getGmtTimeOffset() {
+        return gmtTimeOffset;
     }
 
-    public void setGmt_offset(short gmt_offset) {
-        this.gmt_offset = gmt_offset;
+    public void setGmtTimeOffset(short gmtTimeOffset) {
+        this.gmtTimeOffset = gmtTimeOffset;
     }
 
-    public String getStd_name() {
-        return std_name;
+    public String getStdName() {
+        return stdName;
     }
 
-    public void setStd_name(String std_name) {
-        this.std_name = std_name;
+    public void setStdName(String stdName) {
+        this.stdName = stdName;
     }
 
-    public short getDst_month_start() {
-        return dst_month_start;
+    public short getDstMonthStart() {
+        return dstMonthStart;
     }
 
-    public void setDst_month_start(short dst_month_start) {
-        this.dst_month_start = dst_month_start;
+    public void setDstMonthStart(short dstMonthStart) {
+        this.dstMonthStart = dstMonthStart;
     }
 
-
-    public String getDst_time_start() {
-        return dst_time_start;
+    public short getDstDayInMonthStart() {
+        return dstDayInMonthStart;
     }
 
-    public void setDst_time_start(String dst_time_start) {
-        this.dst_time_start = dst_time_start;
+    public void setDstDayInMonthStart(short dstDayInMonthStart) {
+        this.dstDayInMonthStart = dstDayInMonthStart;
     }
 
-    public short getDst_time_offset() {
-        return dst_time_offset;
+    public String getDstTimeStart() {
+        return dstTimeStart;
     }
 
-    public void setDst_time_offset(short dst_time_offset) {
-        this.dst_time_offset = dst_time_offset;
+    public void setDstTimeStart(String dstTimeStart) {
+        this.dstTimeStart = dstTimeStart;
     }
 
-    public short getDst_month_end() {
-        return dst_month_end;
+    public String getDstName() {
+        return dstName;
     }
 
-    public void setDst_month_end(short dst_month_end) {
-        this.dst_month_end = dst_month_end;
+    public void setDstName(String dstName) {
+        this.dstName = dstName;
     }
 
-
-
-    public String getDst_time_end() {
-        return dst_time_end;
+    public short getDstTimeOffset() {
+        return dstTimeOffset;
     }
 
-    public void setDst_time_end(String dst_time_end) {
-        this.dst_time_end = dst_time_end;
+    public void setDstTimeOffset(short dstTimeOffset) {
+        this.dstTimeOffset = dstTimeOffset;
     }
 
-    public String getDst_name() {
-        return dst_name;
+    public short getDstMonthEnd() {
+        return dstMonthEnd;
     }
 
-    public void setDst_name(String dst_name) {
-        this.dst_name = dst_name;
+    public void setDstMonthEnd(short dstMonthEnd) {
+        this.dstMonthEnd = dstMonthEnd;
+    }
+
+    public short getDstDayInMonthEnd() {
+        return dstDayInMonthEnd;
+    }
+
+    public void setDstDayInMonthEnd(short dstDayInMonthEnd) {
+        this.dstDayInMonthEnd = dstDayInMonthEnd;
+    }
+
+    public String getDstTimeEnd() {
+        return dstTimeEnd;
+    }
+
+    public void setDstTimeEnd(String dstTimeEnd) {
+        this.dstTimeEnd = dstTimeEnd;
     }
 
     public void log(String tag){
@@ -140,32 +169,17 @@ public class TimeZone extends RealmObject {
         return  "Id = " + getId()+ "\n" +
                 "Name = " + getName() + "\n" +
                 "Gmt = " + getGmt() + "\n" +
-                "Offset = " + getGmt_offset() + "\n" +
-                "StdName = " + getStd_name() + "\n" +
-                "DstMonthStart = " + getDst_month_start() + "\n" +
-                "DstDayInMonthStart = " + getDst_day_in_month_start() + "\n" +
-                "DstTimeStart = " + getDst_time_start() + "\n" +
-                "DstName = " + getDst_name() + "\n" +
+                "Offset = " + getGmtTimeOffset() + "\n" +
+                "StdName = " + getStdName() + "\n" +
+                "DstMonthStart = " + getDstMonthStart() + "\n" +
+                "DstDayInMonthStart = " + getDstDayInMonthStart() + "\n" +
+                "DstTimeStart = " + getDstTimeStart() + "\n" +
+                "DstName = " + getDstName() + "\n" +
                 "Name = " + getName() + "\n" +
-                "DstMonthEnd = " + getDst_month_end() + "\n" +
-                "DstDayInMonthEnd = " + getDst_day_in_month_end() + "\n" +
-                "DstTimeEnd = " + getDst_time_end() + "\n";
+                "DstMonthEnd = " + getDstMonthEnd() + "\n" +
+                "DstDayInMonthEnd = " + getDstDayInMonthEnd() + "\n" +
+                "DstTimeEnd = " + getDstTimeEnd() + "\n";
     }
 
-    public short getDst_day_in_month_start() {
-        return dst_day_in_month_start;
-    }
-
-    public void setDst_day_in_month_start(short dst_day_in_month_start) {
-        this.dst_day_in_month_start = dst_day_in_month_start;
-    }
-
-    public short getDst_day_in_month_end() {
-        return dst_day_in_month_end;
-    }
-
-    public void setDst_day_in_month_end(short dst_day_in_month_end) {
-        this.dst_day_in_month_end = dst_day_in_month_end;
-    }
 }
 

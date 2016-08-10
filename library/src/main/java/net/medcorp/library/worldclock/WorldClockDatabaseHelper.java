@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import net.medcorp.library.R;
 import net.medcorp.library.util.AssetsUtil;
 
@@ -38,6 +40,7 @@ public class WorldClockDatabaseHelper{
     public void setupWorldClock() {
         boolean citiesSuccess = false;
         boolean timezonesSuccess = false;
+        Gson gson = new Gson();
         Log.w("Karl","Current TimeZone version = " + getTimeZoneVersion());
         Log.w("Karl","Current City version     = " + getCitiesVersion());
         Log.w("Karl","Newest TimeZone version  = " + TIMEZONE_VERSION );
@@ -53,7 +56,8 @@ public class WorldClockDatabaseHelper{
                 final JSONArray timezonesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_timezones_file_name);
                 for (int i = 0; i< timezonesArray.length(); i++) {
                     realm.beginTransaction();
-                    realm.createObjectFromJson(TimeZone.class, timezonesArray.getJSONObject(i));
+                    TimeZone timezone = gson.fromJson(timezonesArray.getJSONObject(i).toString(),TimeZone.class);
+                    realm.copyToRealm(timezone);
                     realm.commitTransaction();
                 }
                 timezonesSuccess = true;
@@ -70,12 +74,12 @@ public class WorldClockDatabaseHelper{
                 final JSONArray citiesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_cities_file_name);
                 final RealmResults<TimeZone> results = realm.where(TimeZone.class).findAll();
                 for (int i = 0; i< citiesArray.length(); i++) {
-                    final int finalI = i;
                     realm.beginTransaction();
-                    City city = realm.createObjectFromJson(City.class,citiesArray.getJSONObject(finalI));
+                    City city = gson.fromJson(citiesArray.getJSONObject(i).toString(),City.class);
+                    City realmCity = realm.copyToRealm(city);
                     for (TimeZone timezone: results) {
-                        if (city.getTimezone_id() == timezone.getId()){
-                            city.setTimezoneRef(timezone);
+                        if (realmCity.getTimezoneId() == timezone.getId()){
+                            realmCity.setTimezoneRef(timezone);
                             break;
                         }
                     }

@@ -19,11 +19,11 @@ public class DaylightSavingTimeUtil {
 
 
     public static Calendar getStartDST(TimeZone timeZone){
-        return getDateByTimeZoneVariable(timeZone.getDst_month_start(), timeZone.getDst_day_in_month_start(),timeZone.getDst_time_start());
+        return getDateByTimeZoneVariable(timeZone.getDstMonthStart(), timeZone.getDstDayInMonthStart(),timeZone.getDstTimeStart());
     }
 
     public static Calendar getEndDST(TimeZone timeZone){
-        return getDateByTimeZoneVariable(timeZone.getDst_month_end(), timeZone.getDst_day_in_month_end(),timeZone.getDst_time_end());
+        return getDateByTimeZoneVariable(timeZone.getDstMonthEnd(), timeZone.getDstDayInMonthEnd(),timeZone.getDstTimeEnd());
     }
 
     public static long getStartDSTTimeStamp(TimeZone timeZone){
