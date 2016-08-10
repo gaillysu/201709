@@ -15,15 +15,13 @@ public class TimeZone extends RealmObject {
 
     private String gmt;
 
-    private short offset;
+    private short gmt_offset;
 
     private String std_name;
 
     private short dst_month_start;
 
-    private short dst_day_week_start;
-
-    private short dst_nth_day_start;
+    private short dst_day_in_month_start;
 
     private String dst_time_start;
 
@@ -33,9 +31,7 @@ public class TimeZone extends RealmObject {
 
     private short dst_month_end;
 
-    private short dst_day_week_end;
-
-    private short dst_nth_day_end;
+    private short dst_day_in_month_end;
 
     private String dst_time_end;
 
@@ -68,12 +64,12 @@ public class TimeZone extends RealmObject {
         this.gmt = gmt;
     }
 
-    public short getOffset() {
-        return offset;
+    public short getGmt_offset() {
+        return gmt_offset;
     }
 
-    public void setOffset(short offset) {
-        this.offset = offset;
+    public void setGmt_offset(short gmt_offset) {
+        this.gmt_offset = gmt_offset;
     }
 
     public String getStd_name() {
@@ -92,21 +88,6 @@ public class TimeZone extends RealmObject {
         this.dst_month_start = dst_month_start;
     }
 
-    public short getDst_day_week_start() {
-        return dst_day_week_start;
-    }
-
-    public void setDst_day_week_start(short dst_day_week_start) {
-        this.dst_day_week_start = dst_day_week_start;
-    }
-
-    public short getDst_nth_day_start() {
-        return dst_nth_day_start;
-    }
-
-    public void setDst_nth_day_start(short dst_nth_day_start) {
-        this.dst_nth_day_start = dst_nth_day_start;
-    }
 
     public String getDst_time_start() {
         return dst_time_start;
@@ -132,21 +113,7 @@ public class TimeZone extends RealmObject {
         this.dst_month_end = dst_month_end;
     }
 
-    public short getDst_day_week_end() {
-        return dst_day_week_end;
-    }
 
-    public void setDst_day_week_end(short dst_day_week_end) {
-        this.dst_day_week_end = dst_day_week_end;
-    }
-
-    public short getDst_nth_day_end() {
-        return dst_nth_day_end;
-    }
-
-    public void setDst_nth_day_end(short dst_nth_day_end) {
-        this.dst_nth_day_end = dst_nth_day_end;
-    }
 
     public String getDst_time_end() {
         return dst_time_end;
@@ -173,19 +140,32 @@ public class TimeZone extends RealmObject {
         return  "Id = " + getId()+ "\n" +
                 "Name = " + getName() + "\n" +
                 "Gmt = " + getGmt() + "\n" +
-                "Offset = " + getOffset() + "\n" +
+                "Offset = " + getGmt_offset() + "\n" +
                 "StdName = " + getStd_name() + "\n" +
                 "DstMonthStart = " + getDst_month_start() + "\n" +
-                "DstDayWeekStart = " + getDst_day_week_start() + "\n" +
-                "DstNthDayStart = " + getDst_nth_day_start() + "\n" +
+                "DstDayInMonthStart = " + getDst_day_in_month_start() + "\n" +
                 "DstTimeStart = " + getDst_time_start() + "\n" +
                 "DstName = " + getDst_name() + "\n" +
                 "Name = " + getName() + "\n" +
                 "DstMonthEnd = " + getDst_month_end() + "\n" +
-                "DstDayWeekEnd = " + getDst_day_week_end() + "\n" +
-                "DstNthDayEnd = " + getDst_nth_day_end() + "\n" +
+                "DstDayInMonthEnd = " + getDst_day_in_month_end() + "\n" +
                 "DstTimeEnd = " + getDst_time_end() + "\n";
     }
 
+    public short getDst_day_in_month_start() {
+        return dst_day_in_month_start;
+    }
+
+    public void setDst_day_in_month_start(short dst_day_in_month_start) {
+        this.dst_day_in_month_start = dst_day_in_month_start;
+    }
+
+    public short getDst_day_in_month_end() {
+        return dst_day_in_month_end;
+    }
+
+    public void setDst_day_in_month_end(short dst_day_in_month_end) {
+        this.dst_day_in_month_end = dst_day_in_month_end;
+    }
 }
 

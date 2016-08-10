@@ -38,7 +38,10 @@ public class WorldClockDatabaseHelper{
     public void setupWorldClock() {
         boolean citiesSuccess = false;
         boolean timezonesSuccess = false;
-
+        Log.w("Karl","Current TimeZone version = " + getTimeZoneVersion());
+        Log.w("Karl","Current City version     = " + getCitiesVersion());
+        Log.w("Karl","Newest TimeZone version  = " + TIMEZONE_VERSION );
+        Log.w("Karl","Newest City version      = " + CITIES_VERSION);
         boolean forceSync = false;
         final RealmResults<TimeZone> oldTimezones = realm.where(TimeZone.class).findAll();
         final RealmResults<City> oldCities = realm.where(City.class).findAll();
@@ -71,8 +74,8 @@ public class WorldClockDatabaseHelper{
                     realm.beginTransaction();
                     City city = realm.createObjectFromJson(City.class,citiesArray.getJSONObject(finalI));
                     for (TimeZone timezone: results) {
-                        if (city.getTimezone().equals(timezone.getName())){
-                            city.setTimezone(timezone);
+                        if (city.getTimezone_id() == timezone.getId()){
+                            city.setTimezoneRef(timezone);
                             break;
                         }
                     }
