@@ -8,7 +8,9 @@ import com.google.gson.Gson;
 
 import net.medcorp.library.R;
 import net.medcorp.library.util.AssetsUtil;
+import net.medcorp.library.worldclock.event.WorldClockInitializeEvent;
 
+import org.greenrobot.eventbus.EventBus;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -38,70 +40,66 @@ public class WorldClockDatabaseHelper{
     }
 
     public void setupWorldClock() {
-        boolean citiesSuccess = false;
-        boolean timezonesSuccess = false;
-        Gson gson = new Gson();
-        Log.w("Karl","Current TimeZone version = " + getTimeZoneVersion());
-        Log.w("Karl","Current City version     = " + getCitiesVersion());
-        Log.w("Karl","Newest TimeZone version  = " + TIMEZONE_VERSION );
-        Log.w("Karl","Newest City version      = " + CITIES_VERSION);
-        boolean forceSync = false;
-        final RealmResults<TimeZone> oldTimezones = realm.where(TimeZone.class).findAll();
-        final RealmResults<City> oldCities = realm.where(City.class).findAll();
-        if (oldCities.size() == 0 || oldTimezones.size() == 0){
-            forceSync = true;
-        }
-        if(getTimeZoneVersion() < TIMEZONE_VERSION || forceSync) {
-            try {
-                final JSONArray timezonesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_timezones_file_name);
-                for (int i = 0; i< timezonesArray.length(); i++) {
-                    realm.beginTransaction();
-                    TimeZone timezone = gson.fromJson(timezonesArray.getJSONObject(i).toString(),TimeZone.class);
-                    realm.copyToRealm(timezone);
-                    realm.commitTransaction();
-                }
-                timezonesSuccess = true;
-            } catch (IOException e) {
-                Log.w("med-library","Couldn't open the timezones json!");
-            } catch (JSONException e) {
-                Log.w("med-library","This shouldn't happen!");
-            }
-        } else {
-            Log.w("med-library", "Don't need to setup the timezone!");
-        }
-        if (getCitiesVersion() < CITIES_VERSION || forceSync){
-            try {
-                final JSONArray citiesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_cities_file_name);
-                final RealmResults<TimeZone> results = realm.where(TimeZone.class).findAll();
-                for (int i = 0; i< citiesArray.length(); i++) {
-                    realm.beginTransaction();
-                    City city = gson.fromJson(citiesArray.getJSONObject(i).toString(),City.class);
-                    City realmCity = realm.copyToRealm(city);
-                    for (TimeZone timezone: results) {
-                        if (realmCity.getTimezoneId() == timezone.getId()){
-                            realmCity.setTimezoneRef(timezone);
-                            break;
+        realm.executeTransactionAsync(new Realm.Transaction() {
+
+            @Override
+            public void execute(Realm realm) {
+                EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED));
+                boolean citiesSuccess = false;
+                boolean timezonesSuccess = false;
+                Gson gson = new Gson();
+                final RealmResults<TimeZone> oldTimezones = realm.where(TimeZone.class).findAll();
+                final RealmResults<City> oldCities = realm.where(City.class).findAll();
+                final boolean forceSync = oldCities.size() == 0 || oldTimezones.size() == 0;
+                if(getTimeZoneVersion() < TIMEZONE_VERSION || forceSync) {
+                    EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED_TIMEZONES));
+                    try {
+                        final JSONArray timezonesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_timezones_file_name);
+                        for (int i = 0; i< timezonesArray.length(); i++) {
+                            TimeZone timezone = gson.fromJson(timezonesArray.getJSONObject(i).toString(),TimeZone.class);
+                            realm.copyToRealm(timezone);
                         }
+                        timezonesSuccess = true;
+                    } catch (IOException | JSONException e) {
+                        EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.EXCEPTION, e));
                     }
-                    realm.commitTransaction();
+                } else {
+                    Log.w("med-library", "Don't need to setup the timezone!");
                 }
-                citiesSuccess = true;
-            } catch (IOException e) {
-                Log.w("med-library","Couldn't open the cities json!");
-            } catch (JSONException e) {
-                Log.w("med-library","This shouldn't happen!");
+                EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.FINISHED_TIMEZONES));
+                if (getCitiesVersion() < CITIES_VERSION || forceSync){
+                    EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED_CITIES));
+                    try {
+                        final JSONArray citiesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_cities_file_name);
+                        final RealmResults<TimeZone> results = realm.where(TimeZone.class).findAll();
+                        for (int i = 0; i< citiesArray.length(); i++) {
+                            City city = gson.fromJson(citiesArray.getJSONObject(i).toString(),City.class);
+                            City realmCity = realm.copyToRealm(city);
+                            for (TimeZone timezone: results) {
+                                if (realmCity.getTimezoneId() == timezone.getId()){
+                                    realmCity.setTimezoneRef(timezone);
+                                    break;
+                                }
+                            }
+                        }
+                        citiesSuccess = true;
+                    } catch (IOException | JSONException e) {
+                        EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.EXCEPTION, e));
+                    }
+                } else {
+                    Log.w("med-library", "Don't need to setup the cities!");
+                }
+                EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.FINISHED_CITIES));
+                if (timezonesSuccess && citiesSuccess) {
+                    oldTimezones.deleteAllFromRealm();
+                    oldCities.deleteAllFromRealm();
+                    bumpCitiesVersion();
+                    bumpTimeZoneVersion();
+                    EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.FINISHED));
+                }
             }
-        } else {
-            Log.w("med-library","Don't need to setup the cities!");
-        }
-        if (timezonesSuccess && citiesSuccess) {
-            realm.beginTransaction();
-            oldTimezones.deleteAllFromRealm();
-            oldCities.deleteAllFromRealm();
-            bumpCitiesVersion();
-            bumpTimeZoneVersion();
-            realm.commitTransaction();
-        }
+        });
+
     }
 
     private void bumpCitiesVersion(){
