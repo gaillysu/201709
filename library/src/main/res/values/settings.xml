@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="config_cities_file_name">cities.json</string>
+    <string name="config_timezones_file_name">timezones.json</string>
+    <string name="config_preferences_world_clock_preferences">world_clock_preferences</string>
+    <string name="config_preferences_cities_db_saved_version">cities_db_version</string>
+    <string name="config_preferences_timezone_db_saved_version">timezone_db_version</string>
+
+    <!-- DON'T BUMP THIS VERSION IF YOU ARE NOT SURE WHAT YOU ARE DOING.-->
+    <integer name="config_preferences_cities_db_version_current">1</integer>
+    <integer name="config_preferences_timezone_db_version_current">1</integer>
+
+</resources>

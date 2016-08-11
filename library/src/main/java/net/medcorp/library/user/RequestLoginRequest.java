@@ -49,7 +49,6 @@ public class RequestLoginRequest {
                 responseBody = mgson.fromJson(response.body().string(), UserLoginResponseBody.class);
                 responseUserProfile = responseBody.getUser();
                 listener.requestSuccess(responseUserProfile);
-
             } else {
                 responseUserProfile = responseBody.getMessage();
                 listener.requestFail(responseUserProfile);
