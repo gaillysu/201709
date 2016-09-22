@@ -162,7 +162,7 @@ import java.util.TimerTask;
             //fix a bug:when BLE OTA done,need repair SERVICE, if not, must twice connect SERVICE that SERVICE can work fine, here use code do repair working or twice connection
             //call pairDevice() after every connected, if call it within connect() before startScan() invoke,
             //some smartphone will popup message ,this message comes from Android OS, such as samsung...
-            if((firstConnected || needPair()) && !inOTAMode()) pairDevice();
+            if((firstConnected || needPair()) && !inOTAMode()) pairDevice(eventData.getAddress());
         }
 
         currentlyConnected(eventData.isConnected());
@@ -276,16 +276,13 @@ import java.util.TimerTask;
     }
 
     @Override
-    public void pairDevice()
+    public void pairDevice(String address)
     {
-        if(!hasSavedAddress()){
-            return;
-        }
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!bluetoothAdapter.isEnabled()){
             return;
         }
-        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(getSaveAddress());
+        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
         int state = device.getBondState();
         Log.i(MEDBT.TAG, "pairDevice() function, bind state: " + state);
         if(state != BluetoothDevice.BOND_BONDED)
@@ -303,17 +300,14 @@ import java.util.TimerTask;
         }
     }
     @Override
-    public void unPairDevice()
+    public void unPairDevice(String address)
     {
-        if(!hasSavedAddress()){
-            return;
-        }
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!bluetoothAdapter.isEnabled()) {
             return;
         }
 
-        BluetoothDevice   device = bluetoothAdapter.getRemoteDevice(getSaveAddress());
+        BluetoothDevice   device = bluetoothAdapter.getRemoteDevice(address);
         int state = device.getBondState();
         Log.i(MEDBT.TAG, "unPairDevice() function, bind state: " + state);
         if(state == BluetoothDevice.BOND_BONDED)

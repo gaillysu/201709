@@ -71,8 +71,8 @@ public interface ConnectionController {
 
     public void scan();
 
-    public void pairDevice();
-    public void unPairDevice();
+    public void pairDevice(String address);
+    public void unPairDevice(String address);
 
     public String getSaveAddress();
 

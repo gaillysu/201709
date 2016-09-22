@@ -20,6 +20,7 @@ import android.util.Log;
 import net.medcorp.library.ble.ble.GattAttributes;
 import net.medcorp.library.ble.ble.GattAttributes.SupportedService;
 import net.medcorp.library.ble.ble.MEDBTService;
+import net.medcorp.library.ble.controller.ConnectionController;
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
 import net.medcorp.library.ble.event.BLEBluetoothOffEvent;
 import net.medcorp.library.ble.event.BLEExceptionEvent;
@@ -104,7 +105,6 @@ public class MEDBTImpl implements MEDBT {
 	public MEDBTImpl(Context context, GattAttributesDataSource dataSource){
 		this.context = context;
 		this.dataSource = dataSource;
-		
 		try {
 			initBluetoothAdapter();
 		} catch (BluetoothDisabledException e) {
@@ -242,6 +242,7 @@ public class MEDBTImpl implements MEDBT {
                         bindNewService(deviceAddress);
                     } else {
                         EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
+						ConnectionController.Singleton.getInstance(context,dataSource).pairDevice(deviceAddress);
                         mCurrentService.get().connect(deviceAddress);
                     }
                 }
@@ -392,6 +393,7 @@ public class MEDBTImpl implements MEDBT {
 
                 EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
 				//now connect this device
+				ConnectionController.Singleton.getInstance(context,dataSource).pairDevice(deviceAddress);
 				mCurrentService.get().connect(deviceAddress);
 			}
 		} );

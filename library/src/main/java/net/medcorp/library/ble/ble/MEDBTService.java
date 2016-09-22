@@ -360,22 +360,25 @@ public class MEDBTService extends Service {
 			final String address = gatt.getDevice().getAddress();
 
 			if (newState == BluetoothProfile.STATE_CONNECTED) {
-				queuedMainThread.next();
+				//sometimes, onConnectionStateChange() can be invoked twice
+				if(!bluetoothGattMap.containsKey(address)) {
+					queuedMainThread.next();
 
-				bluetoothGattMap.put(address, gatt);
+					bluetoothGattMap.put(address, gatt);
 
-				Log.i(MEDBT.TAG, "Connected to GATT server : "+ address);
+					Log.i(MEDBT.TAG, "Connected to GATT server : " + address);
 
-				// Attempts to discover services after successful connection.
-				Log.v(MEDBT.TAG, "Attempting to start service discovery");
-				//fixed by Gailly, add 200ms defer to do discover services, let all services get ready
-				queuedMainThread.postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						Log.d(MEDBT.TAG, "Discovering services : " + address);
-						if (gatt != null) gatt.discoverServices();
-					}
-				}, 200);
+					// Attempts to discover services after successful connection.
+					Log.v(MEDBT.TAG, "Attempting to start service discovery");
+					//fixed by Gailly, add 200ms defer to do discover services, let all services get ready
+					queuedMainThread.postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							Log.d(MEDBT.TAG, "Discovering services : " + address);
+							if (gatt != null) gatt.discoverServices();
+						}
+					}, 200);
+				}
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
 				Log.e(MEDBT.TAG, "Disconnected from GATT server : " + address);
