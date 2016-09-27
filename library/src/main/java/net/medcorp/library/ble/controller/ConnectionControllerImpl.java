@@ -282,6 +282,9 @@ import java.util.TimerTask;
         if (!bluetoothAdapter.isEnabled()){
             return;
         }
+        if (address==null || address.isEmpty()) {
+            return;
+        }
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
         int state = device.getBondState();
         Log.i(MEDBT.TAG, "pairDevice() function, bind state: " + state);
@@ -304,6 +307,9 @@ import java.util.TimerTask;
     {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!bluetoothAdapter.isEnabled()) {
+            return;
+        }
+        if (address==null || address.isEmpty()) {
             return;
         }
 
