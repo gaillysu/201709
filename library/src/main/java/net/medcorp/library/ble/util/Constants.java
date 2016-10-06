@@ -10,6 +10,7 @@ public class Constants {
     public static final String LAST_SYNC = "last_sync";
     public static final String LAST_SYNC_TIME_ZONE = "last_sync_time_zone";
     public static final String FIRST_FLAG = "first_flag";
+    public static final String LOGIN = "login";
 
     public enum  enumFileExtension{
         HEX(0),ZIP(1),BIN(2);
