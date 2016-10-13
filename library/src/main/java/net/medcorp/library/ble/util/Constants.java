@@ -72,6 +72,7 @@ public class Constants {
     }
 
     public enum DfuFirmwareTypes{
+          DISTRIBUTION_ZIP(0x00),
           MCU(0x01),
           BOOTLOADER (0x02),
           SOFTDEVICE_AND_BOOTLOADER (0x03),
