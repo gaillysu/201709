@@ -20,6 +20,12 @@ public interface OnOtaControllerListener {
     public void onTransferPercentage(int percent);
     public void onSuccessfulFileTranfered();
     public void onError(OtaController.ERRORCODE errorcode);
+
+    /**
+     * use Nordic dfu library
+     * @param dfuAddress : when BLE device comes into DFU mode, its MAC also got changed
+     */
+    public void onDFUServiceStarted(String dfuAddress);
     /**
      Call when finished OTA, will reconnect SERVICE and read firmware, refresh the firmware  to screen view
      @parameter whichfirmware, firmware type
