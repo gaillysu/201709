@@ -154,19 +154,10 @@ import java.util.TimerTask;
         Log.w("Karl", "On connection state changed @ connection controller");
         if(!eventData.getAddress().equals("") && eventData.isConnected() == true)
         {
-            //firstly connected this SERVICE: such as: first run app, forget this SERVICE
-            boolean firstConnected = !hasSavedAddress();
             setSaveAddress(eventData.getAddress());
-
-            //http://stackoverflow.com/questions/21398766/android-ble-connection-time-interval
-            //fix a bug:when BLE OTA done,need repair SERVICE, if not, must twice connect SERVICE that SERVICE can work fine, here use code do repair working or twice connection
-            //call pairDevice() after every connected, if call it within connect() before startScan() invoke,
-            //some smartphone will popup message ,this message comes from Android OS, such as samsung...
-            if((firstConnected || needPair()) && !inOTAMode()) pairDevice(eventData.getAddress());
         }
 
         currentlyConnected(eventData.isConnected());
-        // TODO BLENNotificationEvent is already posted but no subscribers yet
         EventBus.getDefault().post(new BLENotificationEvent(eventData.isConnected()));
     }
 
@@ -287,7 +278,7 @@ import java.util.TimerTask;
         }
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
         int state = device.getBondState();
-        Log.i(MEDBT.TAG, "pairDevice() function, bind state: " + state);
+        Log.i(MEDBT.TAG, "pairDevice() function, bind state: " + state + ",device: "+address);
         if(state != BluetoothDevice.BOND_BONDED)
         {
             try {
@@ -315,7 +306,7 @@ import java.util.TimerTask;
 
         BluetoothDevice   device = bluetoothAdapter.getRemoteDevice(address);
         int state = device.getBondState();
-        Log.i(MEDBT.TAG, "unPairDevice() function, bind state: " + state);
+        Log.i(MEDBT.TAG, "unPairDevice() function, bind state: " + state + ",device: " + address);
         if(state == BluetoothDevice.BOND_BONDED)
         {
             try {

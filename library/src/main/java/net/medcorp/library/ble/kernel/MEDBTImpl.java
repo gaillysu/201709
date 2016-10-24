@@ -24,6 +24,7 @@ import net.medcorp.library.ble.controller.ConnectionController;
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
 import net.medcorp.library.ble.event.BLEBluetoothOffEvent;
 import net.medcorp.library.ble.event.BLEExceptionEvent;
+import net.medcorp.library.ble.event.BLEPairStateChangedEvent;
 import net.medcorp.library.ble.event.BLESearchEvent;
 import net.medcorp.library.ble.exception.BLENotSupportedException;
 import net.medcorp.library.ble.exception.BluetoothDisabledException;
@@ -32,6 +33,7 @@ import net.medcorp.library.ble.util.Optional;
 import net.medcorp.library.ble.util.QueuedMainThreadHandler;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -61,7 +63,7 @@ public class MEDBTImpl implements MEDBT {
 	 * Also, instanciation is only done Through Builders
 	 * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
 	 */
-	
+
 	private BluetoothAdapter bluetoothAdapter;
 
 	private Context context;
@@ -71,11 +73,11 @@ public class MEDBTImpl implements MEDBT {
 	 * Warning though, alway check they haven't stopped
 	 */
 	private Optional<MEDBTService.LocalBinder> mCurrentService = new Optional<MEDBTService.LocalBinder>();
-	
+
 	private Optional<ServiceConnection> mCurrentServiceConnection = new Optional<ServiceConnection>();
-	
+
     private static final long SCAN_PERIOD = 8000;
-    
+
     /*
 	 *  here use one List to save the scanned devices's MAC address
 	 *  This is only to prevent multi-connections (a recurent bug on Nexus 5)
@@ -86,7 +88,7 @@ public class MEDBTImpl implements MEDBT {
      * If we want to connect to a particular address, here's the place to say it
      */
     private Optional<String> mPreferredAddress = new Optional<String>();
-	
+
 	/*
 	 * save the supported BLE service,avoid connect the same service with the same model BLE device
 	 * more sensors, such as heart rate/ power/ combo,  for every model sensor ,only one device can connect
@@ -105,6 +107,7 @@ public class MEDBTImpl implements MEDBT {
 	public MEDBTImpl(Context context, GattAttributesDataSource dataSource){
 		this.context = context;
 		this.dataSource = dataSource;
+		EventBus.getDefault().register(this);
 		try {
 			initBluetoothAdapter();
 		} catch (BluetoothDisabledException e) {
@@ -140,10 +143,10 @@ public class MEDBTImpl implements MEDBT {
             return;
         }
 
-		
+
         //For some reason we have to do it on the UI thread...
         new Handler(Looper.getMainLooper()).post(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				/*
@@ -163,7 +166,7 @@ public class MEDBTImpl implements MEDBT {
 					isScanning = true;
 					bluetoothAdapter.startLeScan(mLeScanCallback);
 				}
-				
+
 		        // Stops scanning after a pre-defined scan period.
 		        new Handler().postDelayed(new Runnable() {
 		            @Override
@@ -241,9 +244,11 @@ public class MEDBTImpl implements MEDBT {
                     if(mCurrentService.isEmpty()) {
                         bindNewService(deviceAddress);
                     } else {
+						//reset MEDservice.queuedMainThread for this new connection
+						mCurrentService.get().initialize(dataSource);
                         EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
-						ConnectionController.Singleton.getInstance(context,dataSource).pairDevice(deviceAddress);
-                        mCurrentService.get().connect(deviceAddress);
+						//now connect this device
+						connectDevice(deviceAddress);
                     }
                 }
             }
@@ -297,10 +302,10 @@ public class MEDBTImpl implements MEDBT {
         if(bluetoothAdapter !=null){
 			bluetoothAdapter.stopLeScan(mLeScanCallback);
 		}
-		
-		
+
+
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see fr.imaze.sdk.kernel.ImazeBT#isDisconnected()
@@ -317,7 +322,7 @@ public class MEDBTImpl implements MEDBT {
 	/*
 	 * END of the Functions coming from the interface
 	 */
-	
+
 	/*
 	 * killService() , will close all connected BLE, and destory the BT Service
 	 * so be careful call this function,  Imaze Zen and Imaze fitness both Bind BT Service
@@ -346,9 +351,9 @@ public class MEDBTImpl implements MEDBT {
 		} catch ( Throwable t) {
 			t.printStackTrace();
 		}
-		
+
 	}
-	
+
 	private boolean isAlreadyConnected(String deviceAddress) {
 		//If current service isn't null
 		return (mCurrentService.notEmpty()
@@ -392,9 +397,7 @@ public class MEDBTImpl implements MEDBT {
 				mCurrentService.get().initialize(dataSource);
 
                 EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
-				//now connect this device
-				ConnectionController.Singleton.getInstance(context,dataSource).pairDevice(deviceAddress);
-				mCurrentService.get().connect(deviceAddress);
+				connectDevice(deviceAddress);
 			}
 		} );
 
@@ -420,7 +423,7 @@ public class MEDBTImpl implements MEDBT {
 		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
 		    throw new BluetoothDisabledException();
 		}
-		
+
 		// Checks if Bluetooth is supported on the device.
 		if (bluetoothAdapter == null) {
 			throw new BLENotSupportedException();
@@ -428,7 +431,7 @@ public class MEDBTImpl implements MEDBT {
 		if(bluetoothAdapter.isDiscovering()) bluetoothAdapter.cancelDiscovery();
 		return bluetoothAdapter;
 	}
-	
+
 	/**
 	 * Set the current context. Useful if we killed the parent activity
 	 * @param ctx
@@ -508,4 +511,59 @@ public class MEDBTImpl implements MEDBT {
         }
         return uuids;
     }
+
+	@Subscribe
+	public void onEvent(BLEPairStateChangedEvent stateChangedEvent) {
+		if(stateChangedEvent.getPairState() == BluetoothDevice.BOND_BONDED)
+		{
+			if(mCurrentService !=null && mCurrentService.notEmpty()) {
+				Log.i(MEDBT.TAG, "******Device paired successfully,connecting..." + stateChangedEvent.getAddress());
+				mCurrentService.get().connect(stateChangedEvent.getAddress());
+			}
+			else {
+				Log.e(MEDBT.TAG, "******Service is killed");
+			}
+		}
+	}
+
+	/**
+	 *  * connect BLE device workflow:
+	 * 															/ : paired -->directly connect it
+	 *                                                        /
+	 * case 1: normal connect-->scan BLE-->check pair state
+	 *                                                        \
+	 *                                                          \ : unpaired--> firstly pair it-->got paired successfully-->connect it
+	 *
+	 *
+	 * 														/ : paired--> firstly unpair it ---> delay 1s-->connect it directly
+	 * 													   /
+	 * case 2: OTA connect-->scan BLE-->check pair state
+	 * 													   \
+	 *                                                      \ :unpaired-->firstly pair it-->got paired successfully-->connect it-->doing OTA-->OTA done--> unpair it with new MAC-->keep connection with saved MAC
+
+	 * @param deviceAddress
+     */
+	private void connectDevice(final String deviceAddress)
+	{
+		//now connect this device
+		if(bluetoothAdapter.getRemoteDevice(deviceAddress).getBondState() != BluetoothDevice.BOND_BONDED) {
+			ConnectionController.Singleton.getInstance(context, dataSource).pairDevice(deviceAddress);
+		}
+		else {
+			if(mCurrentService !=null && mCurrentService.notEmpty()) {
+				//OTA connect,must firstly forget the new device "nevo_dfu",otherwise, you will get "no found DFU service"
+				if (mSupportServicelist.contains(GattAttributes.SupportedService.OTA_SERVICE)) {
+					ConnectionController.Singleton.getInstance(context, dataSource).unPairDevice(deviceAddress);
+					new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							mCurrentService.get().connect(deviceAddress);
+						}
+					}, 1000);
+				} else {
+					mCurrentService.get().connect(deviceAddress);
+				}
+			}
+		}
+	}
 }
