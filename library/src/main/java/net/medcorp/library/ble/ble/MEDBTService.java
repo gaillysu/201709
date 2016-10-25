@@ -236,9 +236,6 @@ public class MEDBTService extends Service {
 	 * @param address
 	 */
 	private void autoConnect(final String address){
-		//All discoveries should be canceled before we try to connect
-		bluetoothAdapter.cancelDiscovery();
-
 		//If it doesn't connect, we'll retry a bit later
 		if(!connect(address)){
 			Log.v(MEDBT.TAG, "Reschedueling a connection");
@@ -271,11 +268,11 @@ public class MEDBTService extends Service {
 			return false;
 		}
 
-		// if the device has a Gatt service, it means we are connected already first close it, and make a new connection
-		if(bluetoothGattMap.get(address)!=null)
+		// if the device has a Gatt service, it means we are connected already, do nothing. disable many times connected the same device
+		if(bluetoothGattMap.containsKey(address))
 		{
-			bluetoothGattMap.get(address).close();
-			bluetoothGattMap.remove(address);
+			Log.w(MEDBT.TAG, "this device has got connected,disable connect the same device many times.");
+			return true;
 		}
 		final BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
 		if (device == null) {
@@ -283,6 +280,8 @@ public class MEDBTService extends Service {
 			return false;
 		}
 
+		//All discoveries should be canceled before we try to connect
+		bluetoothAdapter.cancelDiscovery();
 		// We don't know if the device is available, so we try to connect to it
 		//We should do this on the UI thread (for some reason)... http://stackoverflow.com/questions/6369287/accessing-ui-thread-handler-from-a-service
 		queuedMainThread.post(new Runnable() {
