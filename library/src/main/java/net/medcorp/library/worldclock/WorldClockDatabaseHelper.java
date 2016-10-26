@@ -17,6 +17,7 @@ import org.json.JSONException;
 import java.io.IOException;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
 /**
@@ -33,6 +34,8 @@ public class WorldClockDatabaseHelper{
 
     public WorldClockDatabaseHelper(Context context){
         this.context = context;
+        RealmConfiguration config = new RealmConfiguration.Builder(context).build();
+        Realm.setDefaultConfiguration(config);
         realm = Realm.getDefaultInstance();
         CITIES_VERSION = context.getResources().getInteger(R.integer.config_preferences_cities_db_version_current);
         TIMEZONE_VERSION = context.getResources().getInteger(R.integer.config_preferences_timezone_db_version_current);
@@ -41,7 +44,6 @@ public class WorldClockDatabaseHelper{
 
     public void setupWorldClock() {
         realm.executeTransactionAsync(new Realm.Transaction() {
-
             @Override
             public void execute(Realm realm) {
                 EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED));
