@@ -171,12 +171,7 @@ public class MEDBTImpl implements MEDBT {
 		        new Handler().postDelayed(new Runnable() {
 		            @Override
 		            public void run() {
-		            	if(bluetoothAdapter !=null && isScanning)
-						{
-							bluetoothAdapter.stopLeScan(mLeScanCallback);
-							Log.v(TAG, "stopLeScan");
-							isScanning = false;
-						}
+						stopScan();
 		            }
 		        }, SCAN_PERIOD);
 			}
