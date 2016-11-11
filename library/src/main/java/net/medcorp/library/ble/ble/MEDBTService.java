@@ -373,13 +373,29 @@ public class MEDBTService extends Service {
 					// Attempts to discover services after successful connection.
 					Log.v(MEDBT.TAG, "Attempting to start service discovery");
 					//fixed by Gailly, add 200ms defer to do discover services, let all services get ready
+					/**
+					 * I add 200ms delay to invoke discoverServices() in our MED-library MEDBTService
+					 * but in some phone model, I still find that discover service returns nothing, perhaps the waiting time isn't enough,
+					 * I get it from Nordic nrf-toolbox source code,so I can change this value from 600ms~1600ms.
+					 * this comment comes from Android-nRF-Toolbox project that is produced by Nordic ,here it is:https://github.com/NordicSemiconductor/Android-DFU-Library
+					 * no.nordicsemi.android.dfu.DfuBaseService line 677~684  as below:
+						 if (gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED) {
+						 logi("Waiting 1600 ms for a possible Service Changed indication...");
+						 waitFor(1600);
+						 // After 1.6s the services are already discovered so the following gatt.discoverServices() finishes almost immediately.
+
+						 // NOTE: This also works with shorted waiting time. The gatt.discoverServices() must be called after the indication is received which is
+						 // about 600ms after establishing connection. Values 600 - 1600ms should be OK.
+						 }
+					 */
+					final long waitingTime = 200;
 					queuedMainThread.postDelayed(new Runnable() {
 						@Override
 						public void run() {
 							Log.d(MEDBT.TAG, "Discovering services : " + address);
 							if (gatt != null) gatt.discoverServices();
 						}
-					}, 200);
+					}, waitingTime);
 				}
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
