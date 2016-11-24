@@ -3,6 +3,7 @@ package net.medcorp.library.ble.controller;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import net.medcorp.library.ble.ble.GattAttributes;
@@ -338,6 +339,11 @@ import java.util.TimerTask;
 
     private boolean createBond(Class btClass, BluetoothDevice btDevice)
             throws Exception {
+        //sometimes my lunar watch can't return paired status,
+        //it always keep binding, I don't know the cause, so I use public function "createBond" to replace the refected function "createBond"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            return btDevice.createBond();
+        }
         Method createBondMethod = btClass.getMethod("createBond");
         Boolean returnValue = (Boolean) createBondMethod.invoke(btDevice);
         return returnValue.booleanValue();
