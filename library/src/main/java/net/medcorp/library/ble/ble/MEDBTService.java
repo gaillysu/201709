@@ -388,7 +388,7 @@ public class MEDBTService extends Service {
 						 // about 600ms after establishing connection. Values 600 - 1600ms should be OK.
 						 }
 					 */
-					final long waitingTime = 200;
+					final long waitingTime = 1000;
 					queuedMainThread.postDelayed(new Runnable() {
 						@Override
 						public void run() {
