@@ -7,14 +7,20 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import net.medcorp.library.ble.ble.GattAttributes;
@@ -159,35 +165,63 @@ public class MEDBTImpl implements MEDBT {
 
                 //clear Queue before every connect
                 QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.MEDBT).clear();
-
-				//We start a scan
-				if(bluetoothAdapter !=null) {
-                    EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
-					isScanning = true;
-					bluetoothAdapter.startLeScan(mLeScanCallback);
-				}
-
-		        // Stops scanning after a pre-defined scan period.
-		        new Handler().postDelayed(new Runnable() {
-		            @Override
-		            public void run() {
+				doScan();
+				// Stops scanning after a pre-defined scan period.
+				new Handler().postDelayed(new Runnable() {
+					@Override
+					public void run() {
 						stopScan();
-		            }
-		        }, SCAN_PERIOD);
+					}
+				}, SCAN_PERIOD);
 			}
 		});
 	}
 
+	private void doScan(){
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+		{
+			final BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
+			final ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
+			EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
+			isScanning = true;
+			scanner.startScan(/*filters*/ null, settings, scanCallback);
+		}
+		else {
+			//We start a scan
+			if (bluetoothAdapter != null) {
+				EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
+				isScanning = true;
+				bluetoothAdapter.startLeScan(mLeScanCallback);
+			}
+		}
+	}
 	@Override
 	public void stopScan() {
 		if(bluetoothAdapter !=null && isScanning)
 		{
-			bluetoothAdapter.stopLeScan(mLeScanCallback);
+			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+			{
+				bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
+			}
+			else {
+				bluetoothAdapter.stopLeScan(mLeScanCallback);
+			}
 			Log.v(TAG, "stopLeScan");
 			isScanning = false;
 		}
 	}
 
+	/**
+	 * this call back invoked by scanner,android L or later:api>=21,android 5.0 or above
+	 */
+	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+	private ScanCallback scanCallback = new ScanCallback() {
+		@Override
+		public void onScanResult(int callbackType, ScanResult result) {
+			if(result.getScanRecord()==null) {return;}
+			mLeScanCallback.onLeScan(result.getDevice(),result.getRssi(),result.getScanRecord().getBytes());
+		}
+	};
 	/**
      *  Device scan callback.This callback is called for all devices founds by the scanner
      */
