@@ -64,6 +64,7 @@ public interface MEDBT {
 
     void stopScan();
 
+    int getBluetoothStatus();
     /**
      * WARNING ! You should disconnect(Empty Optional) before stopping the parent activity
      */

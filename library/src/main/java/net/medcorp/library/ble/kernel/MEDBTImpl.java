@@ -114,15 +114,8 @@ public class MEDBTImpl implements MEDBT {
 		this.context = context;
 		this.dataSource = dataSource;
 		EventBus.getDefault().register(this);
-		try {
-			initBluetoothAdapter();
-		} catch (BluetoothDisabledException e) {
-            EventBus.getDefault().post(new BLEBluetoothOffEvent());
-        } catch (BLENotSupportedException e) {
-            EventBus.getDefault().post(new BLEExceptionEvent(e));
-        }
+		initBluetoothAdapter();
     }
-
 
     @Override
 	public synchronized void startScan(final List<SupportedService> serviceList, final Optional<String> preferredAddress) {
@@ -139,16 +132,17 @@ public class MEDBTImpl implements MEDBT {
 		}
 
 		//We check if bluetooth is enabled and/or if the device isn't ble capable
-		try {
-			initBluetoothAdapter();
-        } catch (BluetoothDisabledException e) {
-            EventBus.getDefault().post(new BLEBluetoothOffEvent());
-            return;
-        } catch (BLENotSupportedException e) {
-            EventBus.getDefault().post(new BLEExceptionEvent(e));
-            return;
-        }
-
+		initBluetoothAdapter();
+		if(bluetoothAdapter == null )
+		{
+			Log.w(TAG, "ble feature is not support,return");
+			return;
+		}
+		if(!bluetoothAdapter.isEnabled())
+		{
+			Log.w(TAG, "bluetooth is off,return");
+			return;
+		}
 
         //For some reason we have to do it on the UI thread...
         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -209,6 +203,15 @@ public class MEDBTImpl implements MEDBT {
 			Log.v(TAG, "stopLeScan");
 			isScanning = false;
 		}
+	}
+
+	@Override
+	public int getBluetoothStatus() {
+		if(bluetoothAdapter == null) {
+			//-1 means ble feature is not supported.
+			return -1;
+		}
+		return bluetoothAdapter.getState();
 	}
 
 	/**
@@ -436,27 +439,20 @@ public class MEDBTImpl implements MEDBT {
 		Log.v(MEDBT.TAG, "context.bindService");
 	}
 
-	private BluetoothAdapter initBluetoothAdapter() throws BLENotSupportedException, BluetoothDisabledException {
+	private BluetoothAdapter initBluetoothAdapter()  {
+
 		//If BLE is not supported, we throw an error
 		if (!context.getPackageManager().hasSystemFeature(
 				PackageManager.FEATURE_BLUETOOTH_LE)) {
-			throw new BLENotSupportedException();
+			bluetoothAdapter = null;
+			return bluetoothAdapter;
 		}
-
 		// Initializes a Bluetooth adapter. For API level 18 and above, get a
 		// reference to
 		// BluetoothAdapter through BluetoothManager.
 		bluetoothAdapter = ((BluetoothManager) context
 				.getSystemService(Context.BLUETOOTH_SERVICE)).getAdapter();
 
-		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-		    throw new BluetoothDisabledException();
-		}
-
-		// Checks if Bluetooth is supported on the device.
-		if (bluetoothAdapter == null) {
-			throw new BLENotSupportedException();
-		}
 		if(bluetoothAdapter.isDiscovering()) bluetoothAdapter.cancelDiscovery();
 		return bluetoothAdapter;
 	}
