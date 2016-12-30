@@ -36,7 +36,7 @@ public class City extends RealmObject {
 
     private boolean selected;
 
-    public City(){
+    public City() {
 
     }
 
@@ -104,16 +104,16 @@ public class City extends RealmObject {
         this.timezoneId = timezoneId;
     }
 
-    public boolean hasDST(){
+    public boolean hasDST() {
         return getTimezoneRef().getDstTimeOffset() != 0;
     }
 
     public int getOffSetFromGMT() {
-        if (hasDST()){
+        if (hasDST()) {
             Calendar start = getStartDST(timezoneRef);
             Calendar end = getEndDST(timezoneRef);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSSSSS",Locale.US);
-                if (start.before(Calendar.getInstance()) && end.after(Calendar.getInstance())){
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSSSSS", Locale.US);
+            if (start.before(Calendar.getInstance()) && end.after(Calendar.getInstance())) {
                 return getTimezoneRef().getGmtTimeOffset() + getTimezoneRef().getDstTimeOffset();
             }
         }
@@ -121,12 +121,12 @@ public class City extends RealmObject {
     }
 
     public void log(String tag) {
-        Log.w(tag,"id       = " + getId());
-        Log.w(tag,"name     = " + getName());
-        Log.w(tag,"country  = " + getCountry());
-        Log.w(tag,"lat      = " + getLat());
-        Log.w(tag,"lng      = " + getLng());
-        Log.w(tag,"tzid     = " + getTimezoneId());
-        Log.w(tag,"tzr      = " + getTimezoneRef());
+        Log.w(tag, "id       = " + getId());
+        Log.w(tag, "name     = " + getName());
+        Log.w(tag, "country  = " + getCountry());
+        Log.w(tag, "lat      = " + getLat());
+        Log.w(tag, "lng      = " + getLng());
+        Log.w(tag, "tzid     = " + getTimezoneId());
+        Log.w(tag, "tzr      = " + getTimezoneRef());
     }
 }

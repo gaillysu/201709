@@ -21,7 +21,7 @@ public class TimeZone extends RealmObject {
     @SerializedName("gmt")
     private String gmt;
 
-    @SerializedName("gmt_offset")
+    @SerializedName("offset")
     private short gmtTimeOffset;
 
     @SerializedName("std_name")
@@ -30,7 +30,7 @@ public class TimeZone extends RealmObject {
     @SerializedName("dst_month_start")
     private short dstMonthStart;
 
-    @SerializedName("dst_day_in_month_start")
+    @SerializedName("day_in_month_start")
     private short dstDayInMonthStart;
 
     @SerializedName("dst_time_start")
@@ -45,14 +45,14 @@ public class TimeZone extends RealmObject {
     @SerializedName("dst_month_end")
     private short dstMonthEnd;
 
-    @SerializedName("dst_day_in_month_end")
+    @SerializedName("day_in_month_end")
     private short dstDayInMonthEnd;
 
     @SerializedName("dst_time_end")
     private String dstTimeEnd;
 
 
-    public TimeZone(){
+    public TimeZone() {
 
     }
 
@@ -160,13 +160,13 @@ public class TimeZone extends RealmObject {
         this.dstTimeEnd = dstTimeEnd;
     }
 
-    public void log(String tag){
-        Log.w(tag,toString());
+    public void log(String tag) {
+        Log.w(tag, toString());
     }
 
     @Override
     public String toString() {
-        return  "Id = " + getId()+ "\n" +
+        return "Id = " + getId() + "\n" +
                 "Name = " + getName() + "\n" +
                 "Gmt = " + getGmt() + "\n" +
                 "Offset = " + getGmtTimeOffset() + "\n" +
