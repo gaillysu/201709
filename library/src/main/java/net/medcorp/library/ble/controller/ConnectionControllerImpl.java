@@ -337,6 +337,11 @@ import java.util.TimerTask;
         return medBT.getDevices();
     }
 
+    @Override
+    public int getBluetoothStatus() {
+        return medBT.getBluetoothStatus();
+    }
+
     private boolean createBond(Class btClass, BluetoothDevice btDevice)
             throws Exception {
         //sometimes my lunar watch can't return paired status,

@@ -25,6 +25,8 @@ import android.os.Looper;
 import android.util.Log;
 
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
+import net.medcorp.library.ble.event.BLEBluetoothOffEvent;
+import net.medcorp.library.ble.event.BLEBluetoothOnEvent;
 import net.medcorp.library.ble.event.BLEConnectionStateChangedEvent;
 import net.medcorp.library.ble.event.BLEFirmwareVersionReceivedEvent;
 import net.medcorp.library.ble.event.BLEPairStateChangedEvent;
@@ -786,10 +788,12 @@ public class MEDBTService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		// Manual check BT status, on or off. Save variable
 		registerReceiver(MEDBTServiceReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+		registerReceiver(MEDBTServiceReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
 	}
 
-	static BroadcastReceiver MEDBTServiceReceiver = new BroadcastReceiver() {
+	private BroadcastReceiver MEDBTServiceReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if (intent.getAction().equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
@@ -797,6 +801,16 @@ public class MEDBTService extends Service {
 				int connectState = device.getBondState();
 				Log.i(MEDBT.TAG, "Ble pair state got changed:" + connectState + ",device:" + device.getAddress());
 				EventBus.getDefault().post(new BLEPairStateChangedEvent(connectState, device.getAddress()));
+			}else if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED)){
+				switch (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+						BluetoothAdapter.ERROR)) {
+					case BluetoothAdapter.STATE_OFF:
+						EventBus.getDefault().post(new BLEBluetoothOffEvent());
+						break;
+					case BluetoothAdapter.STATE_ON:
+						EventBus.getDefault().post(new BLEBluetoothOnEvent());
+						break;
+				}
 			}
 		}
 	};

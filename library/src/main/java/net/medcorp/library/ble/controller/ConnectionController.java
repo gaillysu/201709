@@ -77,4 +77,8 @@ public interface ConnectionController {
     public String getSaveAddress();
 
     public Set<BluetoothDevice> getDevice();
+
+    public int getBluetoothStatus();
+
+
 }
