@@ -4,9 +4,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import net.medcorp.library.R;
+import net.medcorp.library.worldclock.event.WorldClockInitializeEvent;
+
+import org.greenrobot.eventbus.EventBus;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 
 /**
  * Created by Karl on 8/4/16.
@@ -23,6 +27,8 @@ public class WorldClockDatabaseHelper {
 
 
     public WorldClockDatabaseHelper(Context context) {
+        RealmConfiguration config = new RealmConfiguration.Builder(context).build();
+        Realm.setDefaultConfiguration(config);
         this.context = context;
         CITIES_VERSION = context.getResources().getInteger(R.integer.config_preferences_cities_db_version_current);
         TIMEZONE_VERSION = context.getResources().getInteger(R.integer.config_preferences_timezone_db_version_current);
@@ -30,80 +36,26 @@ public class WorldClockDatabaseHelper {
     }
 
     public void setupWorldClock() {
-//        realm.executeTransactionAsync(new Realm.Transaction() {
-//            @Override
-//            public void execute(Realm realm) {
-//                EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED));
-//                boolean citiesSuccess = false;
-//                boolean timezonesSuccess = false;
-//                Gson gson = new Gson();
-//                final RealmResults<TimeZone> oldTimezones = realm.where(TimeZone.class).findAll();
-//                final RealmResults<City> oldCities = realm.where(City.class).findAll();
-//                final boolean forceSync = oldCities.size() == 0 || oldTimezones.size() == 0;
-//                if(getTimeZoneVersion() < TIMEZONE_VERSION || forceSync) {
-//                    EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED_TIMEZONES));
-//                    try {
-//                        final JSONArray timezonesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_timezones_file_name);
-//                        for (int i = 0; i< timezonesArray.length(); i++) {
-//                            TimeZone timezone = gson.fromJson(timezonesArray.getJSONObject(i).toString(),TimeZone.class);
-//                            realm.copyToRealm(timezone);
-//                        }
-//                        timezonesSuccess = true;
-//                    } catch (IOException | JSONException e) {
-//                        EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.EXCEPTION, e));
-//                    }
-//                } else {
-//                    Log.w("med-library", "Don't need to setup the timezone!");
-//                }
-//                EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.FINISHED_TIMEZONES));
-//                if (getCitiesVersion() < CITIES_VERSION || forceSync){
-//                    EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED_CITIES));
-//                    try {
-//                        final JSONArray citiesArray = AssetsUtil.getJSONArrayFromAssets(context, R.string.config_cities_file_name);
-//                        final RealmResults<TimeZone> results = realm.where(TimeZone.class).findAll();
-//                        for (int i = 0; i< citiesArray.length(); i++) {
-//                            City city = gson.fromJson(citiesArray.getJSONObject(i).toString(),City.class);
-//                            City realmCity = realm.copyToRealm(city);
-//                            for (TimeZone timezone: results) {
-//                                if (realmCity.getTimezoneId() == timezone.getId()){
-//                                    realmCity.setTimezoneRef(timezone);
-//                                    break;
-//                                }
-//                            }
-//                        }
-//                        citiesSuccess = true;
-//                    } catch (IOException | JSONException e) {
-//                        EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.EXCEPTION, e));
-//                    }
-//                } else {
-//                    Log.w("med-library", "Don't need to setup the cities!");
-//                }
-//                EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.FINISHED_CITIES));
-//                if (timezonesSuccess && citiesSuccess) {
-//                    oldTimezones.deleteAllFromRealm();
-//                    oldCities.deleteAllFromRealm();
-//                    bumpCitiesVersion();
-//                    bumpTimeZoneVersion();
-//                    EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.FINISHED));
-//                }
-//            }
-//        });
-
         if (getTimeZoneVersion() == 0 | getCitiesVersion() == 0) {
             setDefaultRealmData();
         } else if (getCitiesVersion() < CITIES_VERSION | getTimeZoneVersion() < TIMEZONE_VERSION) {
+            realm = Realm.getDefaultInstance();
+            RealmResults<TimeZone> oldTimezones = realm.where(TimeZone.class).findAll();
+            RealmResults<City> oldCities = realm.where(City.class).findAll();
+            oldTimezones.deleteAllFromRealm();
+            oldCities.deleteAllFromRealm();
             bumpCitiesVersion();
             bumpTimeZoneVersion();
             setDefaultRealmData();
         }
-
     }
 
     private void setDefaultRealmData() {
+        EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.STARTED));
         RealmConfiguration config = new RealmConfiguration.Builder(context).name(REALM_NAME)
                 .assetFile(context, REALM_NAME).build();
         Realm.setDefaultConfiguration(config);
-        realm = Realm.getDefaultInstance();
+        EventBus.getDefault().post(new WorldClockInitializeEvent(WorldClockInitializeEvent.STATUS.FINISHED));
     }
 
     private void bumpCitiesVersion() {
