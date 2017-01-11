@@ -36,9 +36,11 @@ public class WorldClockDatabaseHelper {
     }
 
     public void setupWorldClock() {
-        if (getTimeZoneVersion() == 0 | getCitiesVersion() == 0) {
+        if (getTimeZoneVersion() == 0 || getCitiesVersion() == 0) {
+            bumpCitiesVersion();
+            bumpTimeZoneVersion();
             setDefaultRealmData();
-        } else if (getCitiesVersion() < CITIES_VERSION | getTimeZoneVersion() < TIMEZONE_VERSION) {
+        } else if (getCitiesVersion() < CITIES_VERSION || getTimeZoneVersion() < TIMEZONE_VERSION) {
             realm = Realm.getDefaultInstance();
             RealmResults<TimeZone> oldTimezones = realm.where(TimeZone.class).findAll();
             RealmResults<City> oldCities = realm.where(City.class).findAll();
