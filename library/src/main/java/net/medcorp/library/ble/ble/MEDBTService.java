@@ -402,12 +402,15 @@ public class MEDBTService extends Service {
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
 				Log.e(MEDBT.TAG, "Disconnected from GATT server : " + address);
-                EventBus.getDefault().post(new BLEConnectionStateChangedEvent(false, address));
 
 				//close this server for next reconnect!!!
 				refreshDeviceCache(gatt);
                 gatt.close();
 				bluetoothGattMap.remove(address);
+				//put here: all devices(now only once device enable) got disconnected, then send disconnect event to top layer (connectController)
+				if(bluetoothGattMap.isEmpty()) {
+					EventBus.getDefault().post(new BLEConnectionStateChangedEvent(false, address));
+				}
 				//we don't know why the Gatt server disconnected, so no need again connect, for example: BLE devices power off or go away
 				return;
 			} else {
@@ -491,6 +494,8 @@ public class MEDBTService extends Service {
 			if(!characteristicChosen){
 				Log.w(MEDBT.TAG, "No characteristic chosen, maybe the bluetooth is unstable : " + address);
                 EventBus.getDefault().post(new BLEUnstableException());
+				//if no find any services(when BLE ota done,ota mode becomes to normal mode,perhaps occur this situation), disconnect it and redo scan in the connectController
+				disconnect(address);
 			}
 			else
 			{

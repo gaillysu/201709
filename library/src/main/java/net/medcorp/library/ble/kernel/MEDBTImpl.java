@@ -269,7 +269,7 @@ public class MEDBTImpl implements MEDBT {
                 if ((mCurrentService.isEmpty() || !mCurrentService.get().isOneOfThoseServiceConnected(advertisedUUIDs))
                         && !GattAttributes.supportedBLEServiceByEnum(dataSource, advertisedUUIDs, mSupportServicelist).isEmpty()) {
 
-                    Log.d(TAG, "Device "+deviceAddress+" found to support service : "+GattAttributes.supportedBLEServiceByEnum(dataSource,advertisedUUIDs, mSupportServicelist).get(0));
+                    Log.d(TAG, "Device "+deviceAddress+" found to support service : "+GattAttributes.supportedBLEServiceByEnum(dataSource,advertisedUUIDs, mSupportServicelist).get(0) + ",name: " + device.getName());
 
                     EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCH_SUCCESS));
                     //If yes, let's bind this device !
@@ -560,32 +560,33 @@ public class MEDBTImpl implements MEDBT {
 	 *                                                          \ : unpaired--> firstly pair it-->got paired successfully-->connect it
 	 *
 	 *
-	 * 														/ : paired--> firstly unpair it ---> delay 1s-->connect it directly
+	 * 														/ : paired--> firstly unpair it ---> delay 1s-->connect it directly -->doing OTA by otaController or DFU library(Nordic)
 	 * 													   /
 	 * case 2: OTA connect-->scan BLE-->check pair state
 	 * 													   \
-	 *                                                      \ :unpaired-->firstly pair it-->got paired successfully-->connect it-->doing OTA-->OTA done--> unpair it with new MAC-->keep connection with saved MAC
+	 *                                                      \ :unpaired-->connect it directly-->doing OTA by otaController or DFU library(Nordic)
 
 	 * @param deviceAddress
      */
 	private void connectDevice(final String deviceAddress)
 	{
-		//now connect this device
-		if(bluetoothAdapter.getRemoteDevice(deviceAddress).getBondState() != BluetoothDevice.BOND_BONDED) {
-			ConnectionController.Singleton.getInstance(context, dataSource).pairDevice(deviceAddress);
+		if (mSupportServicelist.contains(GattAttributes.SupportedService.OTA_SERVICE)) {
+			if (bluetoothAdapter.getRemoteDevice(deviceAddress).getBondState() == BluetoothDevice.BOND_BONDED) {
+				ConnectionController.Singleton.getInstance(context, dataSource).unPairDevice(deviceAddress);
+			}
+			new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					mCurrentService.get().connect(deviceAddress);
+				}
+			}, 1000);
 		}
 		else {
-			if(mCurrentService !=null && mCurrentService.notEmpty()) {
-				//OTA connect,must firstly forget the new device "nevo_dfu",otherwise, you will get "no found DFU service"
-				if (mSupportServicelist.contains(GattAttributes.SupportedService.OTA_SERVICE)) {
-					ConnectionController.Singleton.getInstance(context, dataSource).unPairDevice(deviceAddress);
-					new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-						@Override
-						public void run() {
-							mCurrentService.get().connect(deviceAddress);
-						}
-					}, 1000);
-				} else {
+			//now connect this device
+			if (bluetoothAdapter.getRemoteDevice(deviceAddress).getBondState() != BluetoothDevice.BOND_BONDED) {
+				ConnectionController.Singleton.getInstance(context, dataSource).pairDevice(deviceAddress);
+			} else {
+				if (mCurrentService != null && mCurrentService.notEmpty()) {
 					mCurrentService.get().connect(deviceAddress);
 				}
 			}
