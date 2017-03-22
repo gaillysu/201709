@@ -7,20 +7,15 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.support.annotation.RequiresApi;
+import android.os.ParcelUuid;
 import android.util.Log;
 
 import net.medcorp.library.ble.ble.GattAttributes;
@@ -28,8 +23,6 @@ import net.medcorp.library.ble.ble.GattAttributes.SupportedService;
 import net.medcorp.library.ble.ble.MEDBTService;
 import net.medcorp.library.ble.controller.ConnectionController;
 import net.medcorp.library.ble.datasource.GattAttributesDataSource;
-import net.medcorp.library.ble.event.BLEBluetoothOffEvent;
-import net.medcorp.library.ble.event.BLEExceptionEvent;
 import net.medcorp.library.ble.event.BLEPairStateChangedEvent;
 import net.medcorp.library.ble.event.BLESearchEvent;
 import net.medcorp.library.ble.exception.BLENotSupportedException;
@@ -41,12 +34,14 @@ import net.medcorp.library.ble.util.QueuedMainThreadHandler;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
+
+import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
+import no.nordicsemi.android.support.v18.scanner.ScanFilter;
+import no.nordicsemi.android.support.v18.scanner.ScanResult;
+import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 
 /**
  * /!\/!\/!\Backbone Class : Modify with care/!\/!\/!\
@@ -104,6 +99,9 @@ public class MEDBTImpl implements MEDBT {
     private boolean isScanning = false;
 
 	private GattAttributesDataSource dataSource;
+
+	private BluetoothLeScannerCompat bluetoothLeScanner;
+	private DeviceScanCallback deviceScanCallback;
     /**
      * Simple constructor
      * @param context
@@ -115,6 +113,7 @@ public class MEDBTImpl implements MEDBT {
 		this.dataSource = dataSource;
 		EventBus.getDefault().register(this);
 		initBluetoothAdapter();
+		this.bluetoothLeScanner = BluetoothLeScannerCompat.getScanner();
     }
 
     @Override
@@ -123,16 +122,8 @@ public class MEDBTImpl implements MEDBT {
             Log.i(TAG, "Scanning......return ******");
             return;
         }
-        //If we're already conected to this address, no need to go any further
-        if (preferredAddress.notEmpty() && isAlreadyConnected(preferredAddress.get()) ) {return;}
-
-        //Ok, so we're not connected to this address. If we're connected to another one, we should disconnect
-        if (!isDisconnected()){
-			disconnect();
-		}
 
 		//We check if bluetooth is enabled and/or if the device isn't ble capable
-		initBluetoothAdapter();
 		if(bluetoothAdapter == null )
 		{
 			Log.w(TAG, "ble feature is not support,return");
@@ -159,7 +150,7 @@ public class MEDBTImpl implements MEDBT {
 
                 //clear Queue before every connect
                 QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.MEDBT).clear();
-				doScan();
+				startScan();
 				// Stops scanning after a pre-defined scan period.
 				new Handler().postDelayed(new Runnable() {
 					@Override
@@ -171,35 +162,35 @@ public class MEDBTImpl implements MEDBT {
 		});
 	}
 
-	private void doScan(){
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-		{
-			final BluetoothLeScanner scanner = bluetoothAdapter.getBluetoothLeScanner();
-			final ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build();
-			EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
-			isScanning = true;
-			scanner.startScan(/*filters*/ null, settings, scanCallback);
+	private void startScan(){
+		ScanSettings scanSettings = new ScanSettings.Builder()
+				.setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+				.setUseHardwareBatchingIfSupported(false)
+				.build();
+
+		List<ScanFilter> scanFilterList = new ArrayList<>();
+		if(mPreferredAddress.notEmpty()) {
+			scanFilterList.add(new ScanFilter.Builder().setDeviceAddress(mPreferredAddress.get()).build());
 		}
 		else {
-			//We start a scan
-			if (bluetoothAdapter != null) {
-				EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
-				isScanning = true;
-				bluetoothAdapter.startLeScan(mLeScanCallback);
+			if(mSupportServicelist.contains(GattAttributes.SupportedService.SERVICE)) {
+				scanFilterList.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(dataSource.getService())).build());
+			}
+			if(mSupportServicelist.contains(GattAttributes.SupportedService.OTA_SERVICE)) {
+				scanFilterList.add(new ScanFilter.Builder().setServiceUuid(new ParcelUuid(dataSource.getOtaService())).build());
 			}
 		}
+
+		deviceScanCallback = new DeviceScanCallback();
+		EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCHING));
+		bluetoothLeScanner.startScan(scanFilterList,scanSettings,deviceScanCallback);
+		isScanning = true;
 	}
 	@Override
 	public void stopScan() {
 		if(bluetoothAdapter !=null && isScanning)
 		{
-			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-			{
-				bluetoothAdapter.getBluetoothLeScanner().stopScan(scanCallback);
-			}
-			else {
-				bluetoothAdapter.stopLeScan(mLeScanCallback);
-			}
+			bluetoothLeScanner.stopScan(deviceScanCallback);
 			Log.v(TAG, "stopLeScan");
 			isScanning = false;
 		}
@@ -214,81 +205,41 @@ public class MEDBTImpl implements MEDBT {
 		return bluetoothAdapter.getState();
 	}
 
-	/**
-	 * this call back invoked by scanner,android L or later:api>=21,android 5.0 or above
-	 */
-	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	private ScanCallback scanCallback = new ScanCallback() {
+	private class DeviceScanCallback extends no.nordicsemi.android.support.v18.scanner.ScanCallback {
 		@Override
 		public void onScanResult(int callbackType, ScanResult result) {
 			if(result.getScanRecord()==null) {return;}
-			mLeScanCallback.onLeScan(result.getDevice(),result.getRssi(),result.getScanRecord().getBytes());
-		}
-	};
-	/**
-     *  Device scan callback.This callback is called for all devices founds by the scanner
-     */
-    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 
-        /*
-         * (non-Javadoc)
-         * @see android.bluetooth.BluetoothAdapter.LeScanCallback#onLeScan(android.bluetooth.BluetoothDevice, int, byte[])
-         */
-        @Override
-        public void onLeScan(final BluetoothDevice device, int rssi,
-                             byte[] scanRecord) {
-            final String deviceAddress = device.getAddress();
+			BluetoothDevice device = result.getDevice();
+			final String deviceAddress = device.getAddress();
 
-            if(mPreviousAddress.contains(deviceAddress)){
-                //We are in a case, Due to this issue : http://stackoverflow.com/questions/19502853/android-4-3-ble-filtering-behaviour-of-startlescan
-                //Where the callback has been called twice for the same address
-                //We should not do anything
-            } else {
-                //For each alloweds service, we should have one and only one device.
-                //And it should be active at the moment
+			if(mPreviousAddress.contains(deviceAddress)){
+				//We are in a case, Due to this issue : http://stackoverflow.com/questions/19502853/android-4-3-ble-filtering-behaviour-of-startlescan
+				//Where the callback has been called twice for the same address
+				//We should not do anything
+			} else {
+				if(result.getScanRecord().getServiceUuids()!=null && result.getScanRecord().getServiceUuids().size()>0)
+ 				{
+					Log.d(TAG, "<<<<<<<<<<<Device "+deviceAddress+" found to support service " + ",name: " + device.getName()+">>>>>>>>>");
 
-                //If we're already connected to this address, no need to pursue
-                if(isAlreadyConnected(deviceAddress)){
-					return;
-				}
-
-                //If we have a preferred address and it's not this one, let's not connect
-                if(mPreferredAddress.notEmpty() && !mPreferredAddress.get().equals(deviceAddress) ){
-					return;
-				}
-
-
-                //We will browse the advertised UUIDs to check if one of them correspond to a supported service
-                List<UUID> advertisedUUIDs = parseUUIDs(scanRecord);
-                for(UUID u : advertisedUUIDs){
-                    Log.v(TAG, deviceAddress+" advertises "+u.toString());
-                }
-                //The address shouldn't be previously connected, no other device should support this service and it should be an allowed service (for this scan at least)
-                //Also if a pairing is known to be needed, It should have already been paired : !GattAttributes.shouldPairBeforeUse(advertisedUUIDs) || (GattAttributes.shouldPairBeforeUse(advertisedUUIDs) && device.getBondState()==BluetoothDevice.BOND_BONDED)
-                // Either : No need to pair before use Or : (Need to pair before use and we are actually paired)
-                if ((mCurrentService.isEmpty() || !mCurrentService.get().isOneOfThoseServiceConnected(advertisedUUIDs))
-                        && !GattAttributes.supportedBLEServiceByEnum(dataSource, advertisedUUIDs, mSupportServicelist).isEmpty()) {
-
-                    Log.d(TAG, "Device "+deviceAddress+" found to support service : "+GattAttributes.supportedBLEServiceByEnum(dataSource,advertisedUUIDs, mSupportServicelist).get(0) + ",name: " + device.getName());
-
-                    EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCH_SUCCESS));
-                    //If yes, let's bind this device !
-                    if(mCurrentService.isEmpty()) {
-                        bindNewService(deviceAddress);
-                    } else {
+					EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_SEARCH_SUCCESS));
+					//If yes, let's bind this device !
+					if(mCurrentService.isEmpty()) {
+						bindNewService(deviceAddress);
+					} else {
 						//reset MEDservice.queuedMainThread for this new connection
 						mCurrentService.get().initialize(dataSource);
-                        EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
+						EventBus.getDefault().post(new BLESearchEvent(BLESearchEvent.SEARCH_EVENT.ON_CONNECTING));
 						//now connect this device
 						connectDevice(deviceAddress);
-                    }
-                }
-            }
-            if(!mPreviousAddress.contains(deviceAddress)) {
-                mPreviousAddress.add(deviceAddress);
-            }
-        }
-    };
+					}
+				}
+			}
+			if(!mPreviousAddress.contains(deviceAddress)) {
+				mPreviousAddress.add(deviceAddress);
+			}
+		}
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -332,7 +283,7 @@ public class MEDBTImpl implements MEDBT {
         isScanning = false;
         killService();
         if(bluetoothAdapter !=null){
-			bluetoothAdapter.stopLeScan(mLeScanCallback);
+			stopScan();
 		}
 
 
@@ -384,19 +335,6 @@ public class MEDBTImpl implements MEDBT {
 			t.printStackTrace();
 		}
 
-	}
-
-	private boolean isAlreadyConnected(String deviceAddress) {
-		//If current service isn't null
-		return (mCurrentService.notEmpty()
-			//And it is still binded
-			&& mCurrentService.get().pingBinder()
-			//And the device is still connected
-			&& mCurrentService.get().isConnected(deviceAddress)
-			//And the given device address is not null
-			&& deviceAddress!=null
-			);
-			//Congrats ! No need to connect, the device is already connected !
 	}
 
 	/**
@@ -473,68 +411,6 @@ public class MEDBTImpl implements MEDBT {
     @Override
     public String getSoftwareVersion() {
         return (mCurrentService.notEmpty())?mCurrentService.get().getSoftwareVersion():null;
-    }
-
-
-    /*
-	 * Util Functions
-	 */
-
-    /**
-     * This function will help us decrypt the advertise Data and turn them into readable UUIDs
-     * @param advertisedData
-     * @return a list of UUIDs
-     */
-    private List<UUID> parseUUIDs(final byte[] advertisedData) {
-        List<UUID> uuids = new ArrayList<UUID>();
-
-        int offset = 0;
-        while (offset < (advertisedData.length - 2)) {
-            int len = advertisedData[offset++];
-            if (len == 0)
-                break;
-
-            int type = advertisedData[offset++];
-            switch (type) {
-                case 0x02: // Partial list of 16-bit UUIDs
-                case 0x03: // Complete list of 16-bit UUIDs
-                    while (len > 1) {
-                        int uuid16 = advertisedData[offset++];
-                        uuid16 += (advertisedData[offset++] << 8);
-                        len -= 2;
-                        uuids.add(UUID.fromString(String.format(
-                                "%08x-0000-1000-8000-00805f9b34fb", uuid16)));
-                    }
-                    break;
-                case 0x06:// Partial list of 128-bit UUIDs
-                case 0x07:// Complete list of 128-bit UUIDs
-                    // Loop through the advertised 128-bit UUID's.
-                    while (len >= 16) {
-                        try {
-                            // Wrap the advertised bits and order them.
-                            ByteBuffer buffer = ByteBuffer.wrap(advertisedData,
-                                    offset++, 16).order(ByteOrder.LITTLE_ENDIAN);
-                            long mostSignificantBit = buffer.getLong();
-                            long leastSignificantBit = buffer.getLong();
-                            uuids.add(new UUID(leastSignificantBit,
-                                    mostSignificantBit));
-                        } catch (IndexOutOfBoundsException e) {
-                            // Defensive programming.
-                            Log.e(TAG, e.toString());
-                            continue;
-                        } finally {
-                            // Move the offset to read the next uuid.
-                            offset += 15;
-                            len -= 16;
-                        }
-                    }
-                    break;
-                default:
-                    offset += (len - 1);
-                    break;
-            }
-        }
-        return uuids;
     }
 
 	@Subscribe

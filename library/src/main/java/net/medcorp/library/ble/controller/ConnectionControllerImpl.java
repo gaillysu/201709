@@ -162,11 +162,6 @@ import java.util.TimerTask;
         EventBus.getDefault().post(new BLENotificationEvent(eventData.isConnected()));
     }
 
-    @Subscribe
-    public void onEvent(BLEResponseDataEvent eventData){
-        currentlyConnected(true);
-    }
-
     public void setContext(Context context) {
         this.context = context;
     }
@@ -250,11 +245,6 @@ import java.util.TimerTask;
         {
             setSaveAddress(mSavedAddress);
         }
-    }
-
-    @Subscribe
-    public void onEvent(BLEFirmwareVersionReceivedEvent event){
-        currentlyConnected(true);
     }
 
     @Override
