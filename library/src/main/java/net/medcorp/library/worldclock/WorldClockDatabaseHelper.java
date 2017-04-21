@@ -85,21 +85,39 @@ public class WorldClockDatabaseHelper {
 
     public City get(String name) {
         realm.beginTransaction();
-        City alarm = realm.where(City.class).equalTo("name", name).findFirst();
+        City alarm = realm.copyFromRealm(realm.where(City.class)
+                .equalTo(context.getString(R.string.city_model_city_name), name).findFirst());
         realm.commitTransaction();
         return alarm;
     }
 
-    public City get(int id){
+    public void update(City city) {
         realm.beginTransaction();
-        City city = realm.where(City.class).equalTo("id", id).findFirst();
+        City localCity = realm.where(City.class)
+                .equalTo(context.getString(R.string.city_model_city_id), city.getId()).findFirst();
+        localCity.setSelected(city.isSelected());
+        realm.commitTransaction();
+    }
+
+    public City get(int id) {
+        realm.beginTransaction();
+        City city = realm.copyFromRealm(realm.where(City.class).equalTo(context.getString(R.string.city_model_city_id), id).findFirst());
         realm.commitTransaction();
         return city;
     }
 
+    public List<City> getSelect(){
+        realm.beginTransaction();
+        List<City> selected = realm.copyFromRealm(realm.where(City.class).equalTo("selected", true).findAll());
+        realm.commitTransaction();
+
+        return selected;
+    }
+
     public List<City> getAll() {
         realm.beginTransaction();
-        RealmResults<City> allAlarms = realm.where(City.class).findAllSorted("name");
+        List<City> allAlarms = realm.copyFromRealm(realm.where(City.class)
+                .findAllSorted(context.getString(R.string.city_model_city_name)));
         realm.commitTransaction();
         return allAlarms;
     }

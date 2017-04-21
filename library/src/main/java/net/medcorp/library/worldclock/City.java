@@ -4,9 +4,7 @@ import android.util.Log;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Locale;
 
 import io.realm.RealmObject;
 
@@ -105,7 +103,7 @@ public class City extends RealmObject {
     }
 
     public boolean hasDST() {
-        return getTimezoneRef().getDstTimeOffset() != 0;
+        return getTimezoneRef().getDstDayInMonthStart() != 0 && getTimezoneRef().getDstDayInMonthEnd() != 0;
     }
 
     public int getOffSetFromGMT() {
