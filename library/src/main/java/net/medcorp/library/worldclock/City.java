@@ -4,9 +4,7 @@ import android.util.Log;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Locale;
 
 import io.realm.RealmObject;
 
@@ -105,14 +103,13 @@ public class City extends RealmObject {
     }
 
     public boolean hasDST() {
-        return getTimezoneRef().getDstTimeOffset() != 0;
+        return getTimezoneRef().getDstDayInMonthStart() != 0 && getTimezoneRef().getDstDayInMonthEnd() != 0;
     }
 
     public int getOffSetFromGMT() {
         if (hasDST()) {
             Calendar start = getStartDST(timezoneRef);
             Calendar end = getEndDST(timezoneRef);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSSSSS", Locale.US);
             if (start.before(Calendar.getInstance()) && end.after(Calendar.getInstance())) {
                 return getTimezoneRef().getGmtTimeOffset() + getTimezoneRef().getDstTimeOffset();
             }
