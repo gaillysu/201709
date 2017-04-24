@@ -3,4 +3,5 @@
     <string name="med_library_permission_text">One or more permissions are required to make the application function properly.</string>
     <string name="city_model_city_name" translatable="false">name</string>
     <string name="city_model_city_id" translatable="false">id</string>
+    <string name="city_is_select_home_city" translatable="false">selected</string>
 </resources>

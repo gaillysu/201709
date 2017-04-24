@@ -110,7 +110,6 @@ public class City extends RealmObject {
         if (hasDST()) {
             Calendar start = getStartDST(timezoneRef);
             Calendar end = getEndDST(timezoneRef);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSSSSS", Locale.US);
             if (start.before(Calendar.getInstance()) && end.after(Calendar.getInstance())) {
                 return getTimezoneRef().getGmtTimeOffset() + getTimezoneRef().getDstTimeOffset();
             }

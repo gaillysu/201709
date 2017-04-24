@@ -106,11 +106,11 @@ public class WorldClockDatabaseHelper {
         return city;
     }
 
-    public List<City> getSelect(){
+    public List<City> getSelect() {
         realm.beginTransaction();
-        List<City> selected = realm.copyFromRealm(realm.where(City.class).equalTo("selected", true).findAll());
+        List<City> selected = realm.copyFromRealm(realm.where(City.class)
+                .equalTo(context.getString(R.string.city_is_select_home_city), true).findAll());
         realm.commitTransaction();
-
         return selected;
     }
 
