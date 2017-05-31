@@ -186,12 +186,14 @@ public class MEDBTImpl implements MEDBT {
 		bluetoothLeScanner.startScan(scanFilterList,scanSettings,deviceScanCallback);
 		isScanning = true;
 	}
+
 	@Override
 	public void stopScan() {
-		if(bluetoothAdapter !=null && isScanning)
-		{
-			bluetoothLeScanner.stopScan(deviceScanCallback);
-			Log.v(TAG, "stopLeScan");
+		if(bluetoothAdapter !=null && isScanning) {
+			if (bluetoothAdapter.isEnabled()){
+				bluetoothLeScanner.stopScan(deviceScanCallback);
+				Log.v(TAG, "stopLeScan");
+			}
 			isScanning = false;
 		}
 	}
