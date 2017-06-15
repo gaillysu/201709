@@ -111,7 +111,7 @@ public class City extends RealmObject {
             Calendar start = getStartDST(timezoneRef);
             Calendar end = getEndDST(timezoneRef);
             if (start.before(Calendar.getInstance()) && end.after(Calendar.getInstance())) {
-                return getTimezoneRef().getGmtTimeOffset() + getTimezoneRef().getDstTimeOffset();
+                return getTimezoneRef().getGmtTimeOffset() - getTimezoneRef().getDstTimeOffset();
             }
         }
         return getTimezoneRef().getGmtTimeOffset();
