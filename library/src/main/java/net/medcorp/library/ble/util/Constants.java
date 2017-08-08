@@ -68,7 +68,8 @@ public class Constants {
         WAIT_RECEIPT,
         FINISHED,
         CANCELED,
-        SEND_RECONNECT
+        SEND_RECONNECT,
+        OTA_SERVICE_FOUND
     }
 
     public enum DfuFirmwareTypes{
