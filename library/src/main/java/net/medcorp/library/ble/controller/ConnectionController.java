@@ -71,6 +71,10 @@ public interface ConnectionController {
 
     public void scan();
 
+    public void stopScan();
+
+    public void clearQueue();
+
     public void pairDevice(String address);
     public void unPairDevice(String address);
 
