@@ -189,7 +189,7 @@ public class MEDBTImpl implements MEDBT {
 
 	@Override
 	public void stopScan() {
-		if(bluetoothAdapter !=null && isScanning) {
+		if(bluetoothAdapter !=null ) {
 			if (bluetoothAdapter.isEnabled()){
 				bluetoothLeScanner.stopScan(deviceScanCallback);
 				Log.v(TAG, "stopLeScan");

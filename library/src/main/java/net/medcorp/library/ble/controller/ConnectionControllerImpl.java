@@ -18,6 +18,7 @@ import net.medcorp.library.ble.kernel.MEDBTImpl;
 import net.medcorp.library.ble.model.request.BLERequestData;
 import net.medcorp.library.ble.util.Constants;
 import net.medcorp.library.ble.util.Optional;
+import net.medcorp.library.ble.util.QueuedMainThreadHandler;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -255,6 +256,16 @@ import java.util.TimerTask;
         }
        mTimerIndex = 0;
        restartAutoReconnectTimer();
+    }
+
+    @Override
+    public void stopScan() {
+        medBT.stopScan();
+    }
+
+    @Override
+    public void clearQueue() {
+        QueuedMainThreadHandler.getInstance(QueuedMainThreadHandler.QueueType.MEDBT).clear();
     }
 
     @Override
